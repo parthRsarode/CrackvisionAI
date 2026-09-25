@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "project": {
+    "name": "crackvision-ai",
+    "type": "brownfield"
+  },
+  "workflow": {
+    "auto_commit": true,
+    "mode": "standard"
+  }
+}
