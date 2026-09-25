@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* CAD & Engineering Blueprint Grid Pattern */
+.bg-cad-grid {
+  background-color: #f8fafc;
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+}
+
+.bg-blueprint-dark {
+  background-color: #0f172a;
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* Engineering Technical Card */
+.cad-panel {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
+}
+
+/* Industrial Corner Marks */
+.cad-corners {
+  position: relative;
+}
+.cad-corners::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #0284c7;
+  border-left: 2px solid #0284c7;
+  pointer-events: none;
+}
+.cad-corners::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #0284c7;
+  border-right: 2px solid #0284c7;
+  pointer-events: none;
+}
+
+/* Construction Hazard Stripe Accent */
+.hazard-stripe {
+  background: repeating-linear-gradient(
+    -45deg,
+    #f59e0b,
+    #f59e0b 8px,
+    #1e293b 8px,
+    #1e293b 16px
+  );
+}
+
+/* Engineering Crosshair */
+.cursor-crosshair-cad {
+  cursor: crosshair;
+}
+
+/* Custom technical scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Official Civil Engineering Inspection Report Print Layout */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+  }
+  nav, footer, .no-print, button, .sample-images-section {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .cad-panel {
+    background: #ffffff !important;
+    border: 1px solid #64748b !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .hazard-stripe {
+    display: none !important;
+  }
+}

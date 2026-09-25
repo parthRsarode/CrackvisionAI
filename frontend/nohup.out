@@ -1,0 +1,20 @@
+
+> crackvision-ai-frontend@0.1.0 dev
+> vite
+
+error when starting dev server:
+Error: Port 3000 is already in use
+    at Server.onError (file:///Users/parthsarode/Documents/minor%20one/crackvision-ai/frontend/node_modules/vite/dist/node/chunks/dep-827b23df.js:54873:28)
+    at Server.emit (node:events:514:20)
+    at emitErrorNT (node:net:2416:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+
+> crackvision-ai-frontend@0.1.0 dev
+> vite
+
+error when starting dev server:
+Error: Port 3000 is already in use
+    at Server.onError (file:///Users/parthsarode/Documents/minor%20one/crackvision-ai/frontend/node_modules/vite/dist/node/chunks/dep-827b23df.js:54873:28)
+    at Server.emit (node:events:514:20)
+    at emitErrorNT (node:net:2416:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
