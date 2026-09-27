@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnalysisResult } from '../types/analysis';
-import { Ruler, Eye, SplitSquareVertical, ZoomIn, ZoomOut, Compass, Crosshair } from 'lucide-react';
+import { Ruler, ZoomIn, ZoomOut, Crosshair, Sparkles } from 'lucide-react';
 import CrackComparatorCard from './CrackComparatorCard';
 
 interface ImagePreviewProps {
@@ -12,8 +12,72 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
   const [viewMode, setViewMode] = useState<'overlay' | 'split' | 'original'>('overlay');
   const [showComparator, setShowComparator] = useState<boolean>(true);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
+  const [hoveredPolygon, setHoveredPolygon] = useState<number | null>(null);
 
   const hasCrack = analysis.status === 'crack_detected';
+  const hasPolygons = (analysis.normalized_polygons && analysis.normalized_polygons.length > 0) ||
+                      (analysis.polygons && analysis.polygons.length > 0);
+
+  // Render authentic SVG polygonal contours
+  const renderPolygonOverlay = () => {
+    if (!hasCrack) return null;
+
+    if (analysis.normalized_polygons && analysis.normalized_polygons.length > 0) {
+      return (
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-auto"
+          viewBox="0 0 1000 1000"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          {analysis.normalized_polygons.map((poly, pIdx) => {
+            const pointsStr = poly
+              .map(([nx, ny]) => `${Math.round(nx * 1000)},${Math.round(ny * 1000)}`)
+              .join(' ');
+            const isHovered = hoveredPolygon === pIdx;
+
+            return (
+              <g 
+                key={pIdx} 
+                onMouseEnter={() => setHoveredPolygon(pIdx)}
+                onMouseLeave={() => setHoveredPolygon(null)}
+                className="cursor-crosshair group"
+              >
+                {/* Outer Glow contour */}
+                <polygon
+                  points={pointsStr}
+                  className={`transition-all duration-150 ${
+                    isHovered
+                      ? 'fill-orange-500/50 stroke-orange-400 stroke-[3]'
+                      : 'fill-safetyOrange/30 stroke-safetyOrange stroke-2'
+                  }`}
+                  style={{ vectorEffect: 'non-scaling-stroke' }}
+                />
+
+                {/* Centerline accent */}
+                <polygon
+                  points={pointsStr}
+                  fill="none"
+                  className="stroke-amber-300 stroke-1 opacity-70"
+                  style={{ vectorEffect: 'non-scaling-stroke' }}
+                />
+              </g>
+            );
+          })}
+        </svg>
+      );
+    }
+
+    // Fallback: If no polygons present but crack detected, show CAD wireframe pattern
+    return (
+      <div className="absolute inset-0 pointer-events-none bg-[url('/crack-pattern.svg')] bg-cover mix-blend-screen opacity-90" />
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -84,8 +148,9 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
             /* Split Screen */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="border-2 border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
-                <div className="bg-slate-800 text-white font-mono text-[10px] px-2.5 py-1 font-bold">
-                  RAW SURFACE ORTHOMOSAIC
+                <div className="bg-slate-800 text-white font-mono text-[10px] px-2.5 py-1 font-bold flex items-center justify-between">
+                  <span>RAW SURFACE ORTHOMOSAIC</span>
+                  <span className="text-slate-400">UNPROCESSED</span>
                 </div>
                 <img
                   src={imageUrl}
@@ -95,26 +160,35 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
               </div>
 
               <div className="border-2 border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs relative">
-                <div className="bg-safetyOrange text-white font-mono text-[10px] px-2.5 py-1 font-bold">
-                  SEGMENTED DEFECT TRACE
+                <div className="bg-safetyOrange text-white font-mono text-[10px] px-2.5 py-1 font-bold flex items-center justify-between">
+                  <span>SEGMENTED DEFECT TRACE</span>
+                  <span className="bg-slate-900/40 px-1.5 py-0.2 rounded text-[9px]">
+                    {analysis.has_segmentation ? 'YOLOv8-SEG' : 'CAD VECTOR'}
+                  </span>
                 </div>
-                <img
-                  src={imageUrl}
-                  alt="Segmented surface"
-                  className="w-full h-auto max-h-[380px] object-contain mx-auto"
-                />
-                {hasCrack && (
-                  <div className="absolute inset-0 top-6 pointer-events-none bg-[url('/crack-pattern.svg')] bg-cover mix-blend-multiply opacity-90" />
-                )}
+                <div className="relative overflow-hidden flex items-center justify-center bg-slate-950">
+                  <img
+                    src={imageUrl}
+                    alt="Segmented surface"
+                    className="w-full h-auto max-h-[380px] object-contain mx-auto"
+                  />
+                  {renderPolygonOverlay()}
+                </div>
               </div>
             </div>
           ) : (
             /* Standard Viewport with Technical Crosshairs */
             <div className="border-2 border-slate-400 rounded-lg overflow-hidden bg-slate-900 shadow-md relative">
               {/* Technical HUD Overlay Bar */}
-              <div className="absolute top-2 left-2 z-10 bg-slate-950/80 text-white font-mono text-[10px] px-2 py-0.5 rounded border border-slate-700 flex items-center gap-1.5">
-                <Crosshair className="h-3 w-3 text-safetyOrange" />
-                <span>FIELD SCAN • {analysis.crack_type.toUpperCase()}</span>
+              <div className="absolute top-2 left-2 z-10 bg-slate-950/85 text-white font-mono text-[10px] px-2.5 py-1 rounded border border-slate-700 flex items-center gap-2 backdrop-blur-xs">
+                <Crosshair className="h-3.5 w-3.5 text-safetyOrange" />
+                <span className="font-bold">FIELD SCAN • {analysis.crack_type.toUpperCase()}</span>
+                {analysis.has_segmentation && (
+                  <span className="bg-safetyOrange/20 text-orange-300 border border-safetyOrange/40 px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-1">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    {analysis.defect_count ?? 1} DEFECT MASK{(analysis.defect_count ?? 1) > 1 ? 'S' : ''}
+                  </span>
+                )}
               </div>
 
               <div className="relative overflow-hidden flex items-center justify-center min-h-[340px] bg-slate-950">
@@ -127,17 +201,26 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
                   onClick={() => setIsZoomed(!isZoomed)}
                 />
 
-                {/* Red Contour Overlay */}
-                {viewMode === 'overlay' && hasCrack && (
-                  <div className="absolute inset-0 pointer-events-none bg-[url('/crack-pattern.svg')] bg-cover mix-blend-screen opacity-90" />
-                )}
+                {/* Polygonal Contour Overlay */}
+                {viewMode === 'overlay' && renderPolygonOverlay()}
               </div>
 
               {/* Bottom Calibrated Status Footer */}
-              <div className="bg-slate-900 border-t border-slate-800 text-slate-300 px-3 py-1.5 font-mono text-[10px] flex items-center justify-between">
-                <span>Estimated Aperture: <strong className="text-safetyOrange font-bold">{analysis.estimated_width}</strong></span>
-                <span className="hidden sm:inline">Defect Area: <strong>{analysis.affected_area}</strong></span>
-                <span>Certainty: <strong>{analysis.confidence.toFixed(1)}%</strong></span>
+              <div className="bg-slate-900 border-t border-slate-800 text-slate-300 px-3 py-1.5 font-mono text-[10px] flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  Estimated Aperture: <strong className="text-safetyOrange font-bold">{analysis.estimated_width}</strong>
+                </div>
+                <div className="hidden sm:inline">
+                  Defect Area: <strong>{analysis.affected_area}</strong>
+                </div>
+                <div>
+                  Confidence: <strong>{analysis.confidence.toFixed(1)}%</strong>
+                </div>
+                {analysis.inference_time_ms !== undefined && (
+                  <div className="text-slate-400">
+                    Latency: <span className="text-emerald-400">{analysis.inference_time_ms} ms</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -4,7 +4,7 @@
 
 - **Project**: CrackVision AI (Civil Infrastructure Crack Assessment System)
 - **Active Milestone**: Milestone 2 (v2.0 Real Computer Vision & Metric Calibration)
-- **Current Phase**: Phase 03 (YOLOv8 Segmentation Pipeline Integration) — Ready for Execution (2 plans, 2 waves)
+- **Current Phase**: Phase 03 (YOLOv8 Segmentation Pipeline Integration) — COMPLETED; Ready for Phase 04
 - **Last Updated**: 2026-09-28
 
 ## Locked Architectural Decisions
@@ -13,6 +13,9 @@
 - **DEC-002**: Frontend built on React 18 + TypeScript + Vite running on port 5173 to prevent port conflicts with local dev servers on ports 3000/3001.
 - **DEC-003**: Theme aligned to authentic Civil Engineering CAD drafting aesthetic (Steel Navy `#0f1f38`, Safety Orange `#ea580c`, technical drafting grid) complying with ACI 224R-01.
 - **DEC-004**: Decoupled `CrackAnalyzer` service in backend allows direct model drop-in (YOLOv8) without altering the API contract.
+- **DEC-005**: Deep learning segmentation powered by Ultralytics YOLOv8-Seg with `retina_masks=True` and AnyIO worker thread offloading.
+- **DEC-006**: Geometric morphometry filters non-crack artifacts (aspect ratio < 1.3:1) and categorizes orientation and ACI 224R limits.
+- **DEC-007**: Dynamic SVG polygon overlay rendering in frontend with `vector-effect="non-scaling-stroke"`.
 
 ## Service Status
 

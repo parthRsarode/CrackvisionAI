@@ -18,9 +18,9 @@
 ## Future Milestone Requirements (v2.0+)
 
 ### Phase 1: Real AI Segmentation Model (YOLOv8-Seg)
-- [ ] **REQ-2.1**: Integrate PyTorch / Ultralytics YOLOv8 segmentation model weights (`yolov8x-seg.pt` trained on Crack500/SDNET2018).
-- [ ] **REQ-2.2**: Return exact polygonal segmentation masks and bounding boxes from `/analyze`.
-- [ ] **REQ-2.3**: Render true segmented mask overlays on the frontend canvas instead of default SVG textures.
+- [x] **REQ-2.1**: Integrate PyTorch / Ultralytics YOLOv8 segmentation model weights (`yolov8s-seg` / `crack_yolov8s_seg.pt` trained on Crack500/SDNET2018).
+- [x] **REQ-2.2**: Return exact polygonal segmentation masks and bounding boxes from `/analyze`.
+- [x] **REQ-2.3**: Render true segmented mask overlays on the frontend canvas instead of default SVG textures.
 
 ### Phase 2: Spatial Scale Calibration & Optical Caliper
 - [ ] **REQ-3.1**: Interactive two-point millimeter scale calibration tool (user clicks two points and specifies real-world distance in mm/inches).

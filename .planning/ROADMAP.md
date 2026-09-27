@@ -16,8 +16,8 @@
 
 ## Milestone 2: Real Computer Vision & Metric Calibration (v2.0) — PLANNED
 
-- **Phase 03: YOLOv8 Segmentation Pipeline Integration**
-  - Integrate Ultralytics YOLOv8 segmentation model trained on crack datasets.
+- **Phase 03: YOLOv8 Segmentation Pipeline Integration (COMPLETED)**
+  - Integrated Ultralytics YOLOv8 segmentation model with retina_masks=True.
   - Output exact polygonal mask coordinates and pixel confidence scores from `/analyze`.
   - Render true segmented defect masks on frontend canvas.
 - **Phase 04: Interactive Caliper & Spatial Scale Calibration**

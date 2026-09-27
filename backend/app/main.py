@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import anyio
 import uvicorn
 from .services.crack_analyzer import analyze_crack
 from .schemas import AnalysisResponse
@@ -9,8 +10,8 @@ from datetime import datetime
 
 app = FastAPI(
     title="CrackVision AI API",
-    description="API for crack detection in civil infrastructure",
-    version="1.0.0"
+    description="API for high-resolution crack detection & segmentation in civil infrastructure",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -23,7 +24,11 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "engine": "ultralytics-yolov8-seg"
+    }
 
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_image(file: UploadFile = File(...)):
@@ -46,9 +51,9 @@ async def analyze_image(file: UploadFile = File(...)):
     # Reset file position for potential reuse
     await file.seek(0)
     
-    # Analyze the image
+    # Analyze the image offloading synchronous PyTorch forward pass to AnyIO worker thread
     try:
-        result = await analyze_crack(contents, file.filename)
+        result = await anyio.to_thread.run_sync(analyze_crack, contents, file.filename)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")

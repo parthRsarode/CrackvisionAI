@@ -60,6 +60,22 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
             <p className="text-xs text-slate-600 font-sans">
               Autonomous Optical Damage Survey • In accordance with ACI 224R-01 & ASTM C823
             </p>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-900 text-amber-400 border border-slate-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                {analysis.has_segmentation ? 'Ultralytics YOLOv8-Seg' : 'Simulated Pipeline'}
+              </span>
+              {analysis.inference_time_ms !== undefined && (
+                <span className="text-[11px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  ⚡ {analysis.inference_time_ms} ms
+                </span>
+              )}
+              {analysis.defect_count !== undefined && (
+                <span className="text-[11px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  🎯 {analysis.defect_count} fissure contour{(analysis.defect_count !== 1) ? 's' : ''} delineated
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="text-right">

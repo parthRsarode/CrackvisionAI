@@ -10,6 +10,20 @@ export interface AnalysisResult {
   inspection_note: string;
   annotated_image_note: string;
   created_at: string; // ISO timestamp
+
+  // Phase 03 Computer Vision Segmentation fields
+  has_segmentation?: boolean;
+  polygons?: number[][][]; // [ [ [x, y], ... ] ]
+  normalized_polygons?: number[][][]; // [ [ [x_norm, y_norm], ... ] ]
+  bounding_boxes?: number[][]; // [ [x1, y1, x2, y2], ... ]
+  defect_count?: number;
+  inference_time_ms?: number;
+  aci_compliance?: {
+    water_retaining: boolean;
+    deicing_marine: boolean;
+    humidity_soil: boolean;
+    dry_air_protected: boolean;
+  };
 }
 
 export interface AnalysisHistoryItem extends AnalysisResult {
