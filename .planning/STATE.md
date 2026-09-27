@@ -3,8 +3,9 @@
 ## Current Status
 
 - **Project**: CrackVision AI (Civil Infrastructure Crack Assessment System)
-- **Active Milestone**: Milestone 1 (v1.0 Operational) Complete; Ready for Milestone 2 Planning
-- **Last Updated**: 2026-09-25
+- **Active Milestone**: Milestone 2 (v2.0 Real Computer Vision & Metric Calibration)
+- **Current Phase**: Phase 03 (YOLOv8 Segmentation Pipeline Integration) — Ready for Execution (2 plans, 2 waves)
+- **Last Updated**: 2026-09-28
 
 ## Locked Architectural Decisions
 
