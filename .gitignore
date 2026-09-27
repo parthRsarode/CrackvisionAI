@@ -45,3 +45,10 @@ Thumbs.db
 .cache
 .coverage
 nyc_output
+.pytest_cache/
+test-reports/
+
+# Model Weights
+*.pt
+*.pth
+*.onnx
