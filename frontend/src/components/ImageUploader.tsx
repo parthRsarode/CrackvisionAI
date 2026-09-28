@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, XCircle, AlertTriangle, FileImage, Check, Crosshair, MapPin, Compass } from 'lucide-react';
+import { Upload, XCircle, AlertTriangle, Check, Crosshair, MapPin, Sliders, Edit3 } from 'lucide-react';
 import { SAMPLE_IMAGES, SampleImage } from '../data/sampleImages';
 
 interface ImageUploaderProps {
@@ -17,23 +17,37 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Field Asset Metadata State
-  const [assetType, setAssetType] = useState('Bridge Pier / Abutment');
-  const [exposureCondition, setExposureCondition] = useState('Humidity, moist air, soil contact (ACI max 0.30 mm)');
-  const [stationId, setStationId] = useState('STN-BR-04');
+  // User-Friendly Form State
+  const [componentSelect, setComponentSelect] = useState('Wall / Plaster / Drywall');
+  const [customComponent, setCustomComponent] = useState('');
+  
+  const [environmentSelect, setEnvironmentSelect] = useState('Normal Indoor / Outdoor Surface (Standard)');
+  const [customEnvironment, setCustomEnvironment] = useState('');
+
+  const [locationNote, setLocationNote] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   const maxSizeInBytes = 15 * 1024 * 1024; // 15MB
 
+  // Get final effective component string
+  const effectiveComponent = componentSelect === 'custom' 
+    ? (customComponent.trim() || 'Custom Surface')
+    : componentSelect;
+
+  // Get final effective environment string
+  const effectiveEnvironment = environmentSelect === 'custom'
+    ? (customEnvironment.trim() || 'Custom Environment')
+    : environmentSelect;
+
   const handleFile = (newFile: File) => {
     if (!validTypes.includes(newFile.type)) {
-      setError('Unsupported file type. Please upload a standard field photo (JPG, PNG, or WEBP).');
+      setError('Unsupported file format. Please upload a standard photo (JPG, PNG, or WEBP).');
       return;
     }
     if (newFile.size > maxSizeInBytes) {
-      setError(`File size exceeds 15MB field limit.`);
+      setError(`File size exceeds 15MB limit.`);
       return;
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -72,7 +86,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
     try {
       await onAnalyze(file);
     } catch (err: any) {
-      setError(err.message || 'Inspection analysis failed. Ensure the local vision server is active.');
+      setError(err.message || 'Analysis failed. Ensure the AI vision server is active.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -80,70 +94,103 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
 
   return (
     <div className="cad-panel rounded-xl border border-slate-300 shadow-md p-6 bg-white mb-8">
-      {/* Field Inspection Asset Form */}
+      {/* User-Friendly Photo Context Form */}
       <div className="mb-6 pb-5 border-b border-slate-200">
-        <div className="flex items-center gap-2 mb-3">
-          <Compass className="h-4 w-4 text-safetyOrange" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-mono">
-            Field Inspection Survey Configuration
-          </h3>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-safetyOrange" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-mono">
+              Photo Context & Surface Details
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-500 font-sans">
+            Customize options below or type your own
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-          {/* Asset Category */}
+          {/* 1. Structure / Surface Component */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1 font-mono uppercase">
-              Structure Component
+              Surface / Structure Type
             </label>
             <select
-              value={assetType}
-              onChange={(e) => setAssetType(e.target.value)}
+              value={componentSelect}
+              onChange={(e) => setComponentSelect(e.target.value)}
               className="w-full text-xs bg-slate-50 border border-slate-300 rounded-md p-2 text-slate-900 focus:border-safetyOrange focus:outline-none"
             >
-              <option>Bridge Pier / Abutment</option>
-              <option>Prestressed / RC Girder</option>
-              <option>Suspended Deck Slab</option>
-              <option>Concrete Retaining Wall</option>
-              <option>Highway Rigid Pavement</option>
-              <option>Foundation Footing</option>
+              <option value="Wall / Plaster / Drywall">Wall / Plaster / Drywall</option>
+              <option value="Driveway / Road / Asphalt">Driveway / Road / Asphalt</option>
+              <option value="Pillar / Column / Support">Pillar / Column / Support</option>
+              <option value="Floor / Ceiling / Concrete Slab">Floor / Ceiling / Concrete Slab</option>
+              <option value="Bridge / Retaining Wall">Bridge / Retaining Wall</option>
+              <option value="custom">✏️ Other - Type My Own...</option>
             </select>
+
+            {componentSelect === 'custom' && (
+              <div className="mt-2 relative">
+                <input
+                  type="text"
+                  value={customComponent}
+                  onChange={(e) => setCustomComponent(e.target.value)}
+                  placeholder="Enter your custom surface name..."
+                  className="w-full text-xs bg-amber-50/60 border border-safetyOrange rounded-md pl-7 pr-2 py-1.5 text-slate-900 focus:outline-none font-sans"
+                />
+                <Edit3 className="h-3.5 w-3.5 text-safetyOrange absolute left-2 top-2" />
+              </div>
+            )}
           </div>
 
-          {/* ACI 224R Exposure */}
+          {/* 2. Environment */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1 font-mono uppercase">
-              ACI 224R Exposure Environment
+              Environment / Exposure
             </label>
             <select
-              value={exposureCondition}
-              onChange={(e) => setExposureCondition(e.target.value)}
+              value={environmentSelect}
+              onChange={(e) => setEnvironmentSelect(e.target.value)}
               className="w-full text-xs bg-slate-50 border border-slate-300 rounded-md p-2 text-slate-900 focus:border-safetyOrange focus:outline-none"
             >
-              <option>Humidity, moist air, soil contact (ACI max 0.30 mm)</option>
-              <option>Dry air or protective membrane (ACI max 0.41 mm)</option>
-              <option>Deicing chemicals / industrial (ACI max 0.18 mm)</option>
-              <option>Seawater spray splash zone (ACI max 0.15 mm)</option>
-              <option>Water-retaining containment (ACI max 0.10 mm)</option>
+              <option value="Normal Indoor / Outdoor Surface (Standard)">Normal Indoor / Outdoor (Standard)</option>
+              <option value="Humid / Moisture / Soil Contact">Humid / Moisture / Soil Contact</option>
+              <option value="Severe (Deicing Salts / Marine Splash)">Severe (Salt / Marine Splash)</option>
+              <option value="custom">✏️ Other - Type My Own...</option>
             </select>
+
+            {environmentSelect === 'custom' && (
+              <div className="mt-2 relative">
+                <input
+                  type="text"
+                  value={customEnvironment}
+                  onChange={(e) => setCustomEnvironment(e.target.value)}
+                  placeholder="Describe your custom environment..."
+                  className="w-full text-xs bg-amber-50/60 border border-safetyOrange rounded-md pl-7 pr-2 py-1.5 text-slate-900 focus:outline-none font-sans"
+                />
+                <Edit3 className="h-3.5 w-3.5 text-safetyOrange absolute left-2 top-2" />
+              </div>
+            )}
           </div>
 
-          {/* Station / Chainage */}
+          {/* 3. Photo Location / Note (Simplified from Station/Chainage ID) */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1 font-mono uppercase">
-              Station / Chainage ID
+              Photo Location / Note <span className="text-slate-400 font-normal lowercase">(optional)</span>
             </label>
-            <input
-              type="text"
-              value={stationId}
-              onChange={(e) => setStationId(e.target.value)}
-              placeholder="e.g., CH 14+250 or PIER-02"
-              className="w-full text-xs bg-slate-50 border border-slate-300 rounded-md p-2 text-slate-900 font-mono focus:border-safetyOrange focus:outline-none"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={locationNote}
+                onChange={(e) => setLocationNote(e.target.value)}
+                placeholder="e.g. Living Room Wall, Pillar A, Back Patio"
+                className="w-full text-xs bg-slate-50 border border-slate-300 rounded-md pl-7 pr-2 py-2 text-slate-900 font-sans focus:border-safetyOrange focus:outline-none"
+              />
+              <MapPin className="h-3.5 w-3.5 text-slate-400 absolute left-2 top-2.5" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* CAD Inspection Dropzone */}
+      {/* Inspection Dropzone */}
       <div
         onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
         onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
@@ -161,15 +208,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
           /* Preview State */
           <div className="flex flex-col items-center">
             <div className="relative mb-4 max-w-lg w-full group border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm">
-              {/* Drafting crosshairs corner markers */}
               <div className="absolute top-2 left-2 z-10 bg-slate-900/80 text-white font-mono text-[10px] px-2 py-0.5 rounded flex items-center gap-1">
                 <Crosshair className="h-3 w-3 text-safetyOrange" />
-                <span>SURFACE VIEW: {assetType}</span>
+                <span>SURFACE: {effectiveComponent}</span>
               </div>
 
               <img
                 src={previewUrl}
-                alt="Selected structural surface"
+                alt="Selected surface"
                 className="w-full max-h-[360px] object-contain mx-auto"
               />
 
@@ -190,8 +236,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
               <span className="px-2.5 py-1 bg-white border border-slate-300 rounded shadow-xs">
                 Size: {(file.size / 1024).toFixed(0)} KB
               </span>
+              {locationNote && (
+                <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded font-sans">
+                  Location: {locationNote}
+                </span>
+              )}
               <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded flex items-center gap-1 font-bold">
-                <Check className="h-3.5 w-3.5" /> Ready for Optical Measurement
+                <Check className="h-3.5 w-3.5" /> Ready for Crack Scan
               </span>
             </div>
 
@@ -204,12 +255,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
               {isAnalyzing ? (
                 <>
                   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                  <span>Computing Aperture Widths & Defect Geometry...</span>
+                  <span>Scanning Surface & Measuring Crack Widths...</span>
                 </>
               ) : (
                 <>
                   <Crosshair className="h-4 w-4" />
-                  <span>Execute Structural Condition Assessment</span>
+                  <span>Analyze Crack Detection</span>
                 </>
               )}
             </button>
@@ -222,10 +273,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
             </div>
 
             <h4 className="text-base font-bold text-slate-900 mb-1 font-sans">
-              Select or Drop Concrete Surface Photo
+              Select or Drop Photo Here
             </h4>
             <p className="text-xs text-slate-600 max-w-md mx-auto mb-4 font-sans">
-              Position high-resolution orthographic surface photo perpendicular to plane of defect (JPG, PNG, or WEBP up to 15MB)
+              Upload a clear photo of your wall, road, pillar, floor, or concrete surface (JPG, PNG, WEBP up to 15MB)
             </p>
 
             <input
@@ -241,7 +292,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
               onClick={() => fileInputRef.current?.click()}
               className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-2 px-5 rounded-md shadow-xs transition-colors"
             >
-              Browse Local Inspection Files
+              Choose Photo File
             </button>
           </div>
         )}
