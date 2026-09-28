@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { AnalysisResult } from '../types/analysis';
-import { Ruler, ZoomIn, ZoomOut, Crosshair, Sparkles } from 'lucide-react';
+import { Ruler, ZoomIn, ZoomOut, Crosshair, Sparkles, CheckCircle2 } from 'lucide-react';
 import CrackComparatorCard from './CrackComparatorCard';
 
 interface ImagePreviewProps {
@@ -8,24 +8,76 @@ interface ImagePreviewProps {
   imageUrl: string;
 }
 
+interface ImageBounds {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
 const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
   const [viewMode, setViewMode] = useState<'overlay' | 'split' | 'original'>('overlay');
   const [showComparator, setShowComparator] = useState<boolean>(true);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const [hoveredPolygon, setHoveredPolygon] = useState<number | null>(null);
+  
+  const [imageBounds, setImageBounds] = useState<ImageBounds | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const hasCrack = analysis.status === 'crack_detected';
-  const hasPolygons = (analysis.normalized_polygons && analysis.normalized_polygons.length > 0) ||
-                      (analysis.polygons && analysis.polygons.length > 0);
 
-  // Render authentic SVG polygonal contours
+  // Calculate exact rendered image bounds relative to container to prevent letterbox/pillarbox misalignment
+  const updateImageBounds = useCallback(() => {
+    if (!imgRef.current || !containerRef.current) return;
+    const img = imgRef.current;
+    const container = containerRef.current;
+
+    const containerRect = container.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    if (imgRect.width === 0 || imgRect.height === 0) return;
+
+    setImageBounds({
+      left: imgRect.left - containerRect.left,
+      top: imgRect.top - containerRect.top,
+      width: imgRect.width,
+      height: imgRect.height,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateImageBounds();
+    window.addEventListener('resize', updateImageBounds);
+    return () => window.removeEventListener('resize', updateImageBounds);
+  }, [updateImageBounds, isZoomed, viewMode]);
+
   const renderPolygonOverlay = () => {
     if (!hasCrack) return null;
 
     if (analysis.normalized_polygons && analysis.normalized_polygons.length > 0) {
+      // Style SVG overlay to cover ONLY the actual rendered image area (excluding black margins)
+      const svgStyle: React.CSSProperties = imageBounds
+        ? {
+            position: 'absolute',
+            left: `${imageBounds.left}px`,
+            top: `${imageBounds.top}px`,
+            width: `${imageBounds.width}px`,
+            height: `${imageBounds.height}px`,
+            pointerEvents: 'auto',
+          }
+        : {
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'auto',
+          };
+
       return (
         <svg
-          className="absolute inset-0 w-full h-full pointer-events-auto"
+          style={svgStyle}
           viewBox="0 0 1000 1000"
           preserveAspectRatio="none"
         >
@@ -53,8 +105,8 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
                   points={pointsStr}
                   className={`transition-all duration-150 ${
                     isHovered
-                      ? 'fill-orange-500/50 stroke-orange-400 stroke-[3]'
-                      : 'fill-safetyOrange/30 stroke-safetyOrange stroke-2'
+                      ? 'fill-orange-500/60 stroke-orange-400 stroke-[3]'
+                      : 'fill-safetyOrange/40 stroke-safetyOrange stroke-2'
                   }`}
                   style={{ vectorEffect: 'non-scaling-stroke' }}
                 />
@@ -63,7 +115,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
                 <polygon
                   points={pointsStr}
                   fill="none"
-                  className="stroke-amber-300 stroke-1 opacity-70"
+                  className="stroke-amber-300 stroke-1 opacity-80"
                   style={{ vectorEffect: 'non-scaling-stroke' }}
                 />
               </g>
@@ -73,7 +125,6 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
       );
     }
 
-    // Fallback: If no polygons present but crack detected, show CAD wireframe pattern
     return (
       <div className="absolute inset-0 pointer-events-none bg-[url('/crack-pattern.svg')] bg-cover mix-blend-screen opacity-90" />
     );
@@ -87,7 +138,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
         <div className="flex items-center gap-1 bg-white p-1 rounded border border-slate-300">
           <button
             onClick={() => setViewMode('overlay')}
-            className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+            className={`px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
               viewMode === 'overlay'
                 ? 'bg-civilNavy text-white'
                 : 'text-slate-700 hover:bg-slate-100'
@@ -97,7 +148,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
           </button>
           <button
             onClick={() => setViewMode('split')}
-            className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+            className={`px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
               viewMode === 'split'
                 ? 'bg-civilNavy text-white'
                 : 'text-slate-700 hover:bg-slate-100'
@@ -107,7 +158,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
           </button>
           <button
             onClick={() => setViewMode('original')}
-            className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+            className={`px-3 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
               viewMode === 'original'
                 ? 'bg-civilNavy text-white'
                 : 'text-slate-700 hover:bg-slate-100'
@@ -120,7 +171,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
         {/* Crack Comparator Card Toggle */}
         <button
           onClick={() => setShowComparator(!showComparator)}
-          className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-colors border ${
+          className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-colors border cursor-pointer ${
             showComparator 
               ? 'bg-amber-100 text-amber-900 border-amber-400' 
               : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -133,7 +184,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
         {/* Zoom controls */}
         <button
           onClick={() => setIsZoomed(!isZoomed)}
-          className="px-2.5 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:bg-slate-50 flex items-center gap-1 font-bold"
+          className="px-2.5 py-1.5 bg-white border border-slate-300 rounded text-slate-700 hover:bg-slate-50 flex items-center gap-1 font-bold cursor-pointer"
         >
           {isZoomed ? <ZoomOut className="h-3.5 w-3.5" /> : <ZoomIn className="h-3.5 w-3.5" />}
           <span>{isZoomed ? 'Normal View' : 'Magnify (1.25x)'}</span>
@@ -191,17 +242,25 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
                 )}
               </div>
 
-              <div className="relative overflow-hidden flex items-center justify-center min-h-[340px] bg-slate-950">
+              <div 
+                ref={containerRef} 
+                className="relative overflow-hidden flex items-center justify-center min-h-[340px] bg-slate-950"
+              >
                 <img
+                  ref={imgRef}
                   src={imageUrl}
                   alt="Concrete surface inspection"
+                  onLoad={updateImageBounds}
                   className={`max-w-full max-h-[460px] object-contain mx-auto transition-transform ${
                     isZoomed ? 'scale-125 cursor-zoom-out' : 'cursor-zoom-in'
                   }`}
-                  onClick={() => setIsZoomed(!isZoomed)}
+                  onClick={() => {
+                    setIsZoomed(!isZoomed);
+                    setTimeout(updateImageBounds, 50);
+                  }}
                 />
 
-                {/* Polygonal Contour Overlay */}
+                {/* Pixel-aligned Polygonal Contour Overlay */}
                 {viewMode === 'overlay' && renderPolygonOverlay()}
               </div>
 

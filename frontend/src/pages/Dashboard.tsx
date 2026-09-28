@@ -9,7 +9,7 @@ import AnalysisHistory from '../components/AnalysisHistory';
 import Footer from '../components/Footer';
 import HowItWorksModal from '../components/HowItWorksModal';
 import AboutModal from '../components/AboutModal';
-import { analyzeImage } from '../services/api';
+import { analyzeImage, AnalysisMetadata } from '../services/api';
 import { SampleImage } from '../data/sampleImages';
 
 const Dashboard: React.FC = () => {
@@ -25,11 +25,11 @@ const Dashboard: React.FC = () => {
 
   const uploadSectionRef = useRef<HTMLDivElement>(null);
 
-  const handleAnalyze = useCallback(async (file: File) => {
+  const handleAnalyze = useCallback(async (file: File, metadata?: AnalysisMetadata) => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await analyzeImage(file);
+      const result = await analyzeImage(file, metadata);
       const thumbnail = URL.createObjectURL(file);
 
       const enhancedResult: AnalysisResult & { thumbnail: string } = {
@@ -82,19 +82,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleHistoryItemClick = (item: AnalysisResult & { thumbnail: string }) => {
-    setAnalysis({
-      analysis_id: item.analysis_id,
-      status: item.status,
-      confidence: item.confidence,
-      crack_type: item.crack_type,
-      severity: item.severity,
-      estimated_width: item.estimated_width,
-      affected_area: item.affected_area,
-      recommendation: item.recommendation,
-      inspection_note: item.inspection_note,
-      annotated_image_note: item.annotated_image_note,
-      created_at: item.created_at,
-    });
+    setAnalysis(item);
     setImageUrl(item.thumbnail);
     window.scrollTo({ top: 100, behavior: 'smooth' });
   };
@@ -132,7 +120,7 @@ const Dashboard: React.FC = () => {
             <span>ERROR: {error}</span>
             <button 
               onClick={() => setError(null)} 
-              className="text-xs font-bold text-rose-700 hover:text-rose-900 ml-4 underline"
+              className="text-xs font-bold text-rose-700 hover:text-rose-900 ml-4 underline cursor-pointer"
             >
               Dismiss
             </button>
