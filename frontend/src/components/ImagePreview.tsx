@@ -27,8 +27,10 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
   const imgRef = useRef<HTMLImageElement>(null);
 
   const hasCrack = analysis.status === 'crack_detected';
+  const currentStandardCode = analysis.compliance_details?.standard_code || 
+                              analysis.multi_factor_metrics?.standard_code || 
+                              'ACI';
 
-  // Calculate exact rendered image bounds relative to container to prevent letterbox/pillarbox misalignment
   const updateImageBounds = useCallback(() => {
     if (!imgRef.current || !containerRef.current) return;
     const img = imgRef.current;
@@ -57,7 +59,6 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
     if (!hasCrack) return null;
 
     if (analysis.normalized_polygons && analysis.normalized_polygons.length > 0) {
-      // Style SVG overlay to cover ONLY the actual rendered image area (excluding black margins)
       const svgStyle: React.CSSProperties = imageBounds
         ? {
             position: 'absolute',
@@ -178,7 +179,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
           }`}
         >
           <Ruler className="h-3.5 w-3.5 text-safetyOrange" />
-          <span>{showComparator ? 'Hide ACI Comparator Card' : 'Show ACI Comparator Card'}</span>
+          <span>{showComparator ? 'Hide Optical Comparator Card' : 'Show Optical Comparator Card'}</span>
         </button>
 
         {/* Zoom controls */}
@@ -273,6 +274,9 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
                   Defect Area: <strong>{analysis.affected_area}</strong>
                 </div>
                 <div>
+                  Benchmark: <strong className="text-white font-bold">{currentStandardCode}</strong>
+                </div>
+                <div>
                   Confidence: <strong>{analysis.confidence.toFixed(1)}%</strong>
                 </div>
                 {analysis.inference_time_ms !== undefined && (
@@ -285,12 +289,14 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ analysis, imageUrl }) => {
           )}
         </div>
 
-        {/* Side Panel: Authentic ACI Crack Comparator Card */}
+        {/* Side Panel: Dynamic Benchmark Crack Comparator Card */}
         {showComparator && (
           <div className="lg:col-span-4 flex flex-col justify-start">
             <CrackComparatorCard 
               onClose={() => setShowComparator(false)} 
               detectedWidth={analysis.estimated_width}
+              standardCode={currentStandardCode}
+              standardName={analysis.compliance_details?.standard_name}
             />
           </div>
         )}
