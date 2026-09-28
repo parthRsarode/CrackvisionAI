@@ -195,7 +195,8 @@ class CrackAnalyzer:
                 }
 
             except Exception as e:
-                logger.warning(f"YOLOv8 inference exception, falling back to mock analysis: {e}")
+                logger.error(f"YOLOv8 inference pipeline error: {e}", exc_info=True)
+                raise e
 
         # Resilient fallback to deterministic analysis
         mock_result = self._mock_analysis(seed)

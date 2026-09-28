@@ -155,17 +155,17 @@ class MorphometryService:
 
         # Evaluate ACI compliance
         compliance = {
-            "water_retaining": estimated_aperture_mm <= self.ACI_224R_LIMITS["water_retaining"],
-            "deicing_marine": estimated_aperture_mm <= self.ACI_224R_LIMITS["deicing_marine"],
-            "humidity_soil": estimated_aperture_mm <= self.ACI_224R_LIMITS["humidity_soil"],
-            "dry_air_protected": estimated_aperture_mm <= self.ACI_224R_LIMITS["dry_air_protected"]
+            "water_retaining": bool(estimated_aperture_mm <= self.ACI_224R_LIMITS["water_retaining"]),
+            "deicing_marine": bool(estimated_aperture_mm <= self.ACI_224R_LIMITS["deicing_marine"]),
+            "humidity_soil": bool(estimated_aperture_mm <= self.ACI_224R_LIMITS["humidity_soil"]),
+            "dry_air_protected": bool(estimated_aperture_mm <= self.ACI_224R_LIMITS["dry_air_protected"])
         }
 
         return {
-            "severity": severity,
+            "severity": str(severity),
             "estimated_width": f"{min_aperture_mm} - {estimated_aperture_mm} mm",
-            "max_aperture_mm": estimated_aperture_mm,
-            "affected_area": area_pct_str,
-            "recommendation": recommendation,
+            "max_aperture_mm": float(estimated_aperture_mm),
+            "affected_area": str(area_pct_str),
+            "recommendation": str(recommendation),
             "aci_compliance": compliance
         }
