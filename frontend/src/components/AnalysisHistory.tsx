@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { AnalysisHistoryItem } from '../types/analysis';
+import { AnalysisHistoryItem, AnalysisResult } from '../types/analysis';
 import { 
   FileSpreadsheet, 
   Trash2, 
@@ -7,9 +7,19 @@ import {
   Download, 
   Search, 
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  Database,
+  RefreshCw,
+  FileCheck,
+  CheckCircle2
 } from 'lucide-react';
 import SeverityBadge from './SeverityBadge';
+import { 
+  fetchSurveys, 
+  deleteSurveyRecord, 
+  downloadSurveyPDF, 
+  exportDirectPDF 
+} from '../services/api';
 
 interface AnalysisHistoryProps {
   onHistoryItemClick: (item: AnalysisHistoryItem) => void;
@@ -22,21 +32,70 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
   const [filterSeverity, setFilterSeverity] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isDbConnected, setIsDbConnected] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const loadHistory = useCallback(() => {
+  const loadHistory = useCallback(async () => {
+    setIsSyncing(true);
+
+    // 1. Read local storage cache
+    let localItems: AnalysisHistoryItem[] = [];
     try {
       const saved = localStorage.getItem('crackvision-history');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const valid = parsed.filter(
+        localItems = parsed.filter(
           (item: any) => item.analysis_id && item.status && typeof item.confidence === 'number'
         );
-        setHistory(valid);
-      } else {
-        setHistory([]);
       }
     } catch {
-      setHistory([]);
+      localItems = [];
+    }
+
+    // 2. Fetch from SQLite backend database
+    try {
+      const backendSurveys = await fetchSurveys();
+      setIsDbConnected(true);
+
+      // Merge: create lookup by analysis_id
+      const itemMap = new Map<string, AnalysisHistoryItem>();
+
+      // Put backend surveys into map
+      backendSurveys.forEach((b: any) => {
+        const id = b.survey_id || b.analysis_id;
+        itemMap.set(id, {
+          ...b,
+          analysis_id: id,
+          thumbnail: b.thumbnail || '',
+        });
+      });
+
+      // Overlay local items (which might have client-side thumbnails)
+      localItems.forEach((l) => {
+        const existing = itemMap.get(l.analysis_id);
+        if (existing) {
+          itemMap.set(l.analysis_id, {
+            ...existing,
+            thumbnail: l.thumbnail || existing.thumbnail || '',
+          });
+        } else {
+          itemMap.set(l.analysis_id, l);
+        }
+      });
+
+      const merged = Array.from(itemMap.values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setHistory(merged);
+      localStorage.setItem('crackvision-history', JSON.stringify(merged.slice(0, 50)));
+    } catch {
+      // Backend unavailable; use local cache
+      setIsDbConnected(false);
+      setHistory(localItems);
+    } finally {
+      setIsSyncing(false);
     }
   }, []);
 
@@ -44,10 +103,18 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
     loadHistory();
   }, [loadHistory]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // Optimistic UI update
     const updated = history.filter((item) => item.analysis_id !== id);
     setHistory(updated);
     localStorage.setItem('crackvision-history', JSON.stringify(updated));
+
+    // Try deleting from backend SQLite DB
+    try {
+      await deleteSurveyRecord(id);
+    } catch (e) {
+      // Ignore if it only existed locally
+    }
   };
 
   const handleClear = () => {
@@ -56,9 +123,36 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
     setShowClearConfirm(false);
   };
 
+  const handleDownloadPDF = async (item: AnalysisHistoryItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDownloadingId(item.analysis_id);
+    try {
+      // First try downloading by survey ID from backend DB
+      try {
+        await downloadSurveyPDF(item.analysis_id);
+      } catch {
+        // Fallback to direct export using the client item data
+        await exportDirectPDF(item);
+      }
+    } catch (err: any) {
+      alert(`Could not compile SCAR PDF: ${err.message}`);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const handleExportCsv = () => {
     if (history.length === 0) return;
-    const headers = ['Report_ID', 'Distress_Type', 'Severity', 'Aperture_Width', 'Surface_Area', 'Confidence_Pct', 'Timestamp'];
+    const headers = [
+      'Report_ID', 
+      'Distress_Type', 
+      'Severity', 
+      'Aperture_Width', 
+      'Surface_Area', 
+      'Confidence_Pct', 
+      'Standard_Code',
+      'Timestamp'
+    ];
     const rows = history.map((item) => [
       item.analysis_id,
       `"${item.crack_type}"`,
@@ -66,6 +160,7 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
       `"${item.estimated_width}"`,
       `"${item.affected_area}"`,
       item.confidence.toFixed(1),
+      item.compliance_details?.standard_code || 'ACI',
       item.created_at,
     ]);
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -98,53 +193,76 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
             <ClipboardList className="h-5 w-5 text-safetyOrange" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900 font-sans uppercase tracking-tight">
-              Field Asset Survey Logbook
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 font-sans uppercase tracking-tight">
+                Field Asset Survey Logbook
+              </h3>
+              <span className={`inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                isDbConnected 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-300' 
+                  : 'bg-slate-100 text-slate-600 border border-slate-300'
+              }`}>
+                <Database className="h-3 w-3" />
+                <span>{isDbConnected ? 'SQLite Live' : 'Local Terminal Cache'}</span>
+              </span>
+            </div>
             <p className="text-xs text-slate-600 font-mono">
-              {history.length} documented inspection records in local terminal storage
+              {history.length} documented structural condition inspection records
             </p>
           </div>
         </div>
 
-        {history.length > 0 && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportCsv}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold rounded border border-slate-300 transition-colors"
-              title="Export inspection data to CSV"
-            >
-              <Download className="h-3.5 w-3.5 text-safetyOrange" />
-              <span>Export CSV</span>
-            </button>
+        <div className="flex items-center gap-2">
+          {/* Refresh / DB Sync Button */}
+          <button
+            onClick={loadHistory}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold rounded border border-slate-300 transition-colors cursor-pointer"
+            title="Sync with SQLite backend database"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 text-safetyOrange ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>Sync DB</span>
+          </button>
 
-            {showClearConfirm ? (
-              <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-300 px-2 py-1 rounded text-xs">
-                <span className="text-rose-700 text-[11px] font-mono">Purge log?</span>
-                <button
-                  onClick={handleClear}
-                  className="px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setShowClearConfirm(false)}
-                  className="px-2 py-0.5 bg-slate-200 text-slate-800 rounded text-[10px]"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
+          {history.length > 0 && (
+            <>
               <button
-                onClick={() => setShowClearConfirm(true)}
-                className="px-2.5 py-1.5 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded text-xs font-mono transition-colors"
-                title="Purge survey records"
+                onClick={handleExportCsv}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold rounded border border-slate-300 transition-colors cursor-pointer"
+                title="Export inspection data to CSV"
               >
-                <Trash2 className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5 text-safetyOrange" />
+                <span>Export CSV</span>
               </button>
-            )}
-          </div>
-        )}
+
+              {showClearConfirm ? (
+                <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-300 px-2 py-1 rounded text-xs">
+                  <span className="text-rose-700 text-[11px] font-mono">Purge log?</span>
+                  <button
+                    onClick={handleClear}
+                    className="px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold cursor-pointer"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    className="px-2 py-0.5 bg-slate-200 text-slate-800 rounded text-[10px] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="px-2.5 py-1.5 text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded text-xs font-mono transition-colors cursor-pointer"
+                  title="Purge local survey records"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {history.length > 0 && (
@@ -154,7 +272,7 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by Report ID or Defect Type..."
+              placeholder="Search by Survey ID or Defect Type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-md pl-9 pr-3 py-1.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-safetyOrange"
@@ -166,7 +284,7 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
               <button
                 key={s}
                 onClick={() => setFilterSeverity(s)}
-                className={`px-3 py-1 rounded text-xs font-bold capitalize transition-all ${
+                className={`px-3 py-1 rounded text-xs font-bold capitalize transition-all cursor-pointer ${
                   filterSeverity === s
                     ? 'bg-civilNavy text-white'
                     : 'text-slate-600 hover:bg-slate-200'
@@ -182,7 +300,7 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
       {/* Log Table / List */}
       <div className="mt-4">
         {history.length === 0 ? (
-          <div className="text-center py-8 border border-dashed border-slate-300 rounded-lg bg-slate-50 text-slate-500 text-xs">
+          <div className="text-center py-8 border border-dashed border-slate-300 rounded-lg bg-slate-50 text-slate-500 text-xs font-mono">
             No field condition records logged yet. Run a surface survey above to generate inspection data.
           </div>
         ) : filteredHistory.length === 0 ? (
@@ -214,6 +332,11 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
                         {item.crack_type}
                       </span>
                       <SeverityBadge severity={item.severity} />
+                      {item.compliance_details?.standard_code && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                          {item.compliance_details.standard_code}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-mono text-slate-600">
@@ -226,12 +349,23 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {/* Download Official SCAR PDF Button (REQ-4.3) */}
+                  <button
+                    onClick={(e) => handleDownloadPDF(item, e)}
+                    disabled={downloadingId === item.analysis_id}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 rounded border border-slate-300 text-xs font-mono font-bold transition-colors cursor-pointer"
+                    title="Download Official SCAR PDF Report"
+                  >
+                    <Download className="h-3.5 w-3.5 text-safetyOrange" />
+                    <span>{downloadingId === item.analysis_id ? 'Compiling...' : 'PDF'}</span>
+                  </button>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(item.analysis_id);
                     }}
-                    className="p-1 rounded text-slate-400 hover:text-rose-600 transition-colors"
+                    className="p-1 rounded text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                     title="Delete record"
                   >
                     <X className="h-4 w-4" />

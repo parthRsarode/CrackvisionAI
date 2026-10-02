@@ -23,12 +23,12 @@
 - [x] **REQ-2.3**: Render true segmented mask overlays on the frontend canvas instead of default SVG textures.
 
 ### Phase 2: Spatial Scale Calibration & Optical Caliper
-- [ ] **REQ-3.1**: Interactive two-point millimeter scale calibration tool (user clicks two points and specifies real-world distance in mm/inches).
-- [ ] **REQ-3.2**: Automated ArUco / AprilTag fiducial marker detection on concrete surfaces for zero-touch metric calibration.
-- [ ] **REQ-3.3**: Interactive caliper tool allowing inspectors to click anywhere on a crack to measure localized aperture width.
+- [x] **REQ-3.1**: Interactive two-point millimeter scale calibration tool (user clicks two points and specifies real-world distance in mm/inches).
+- [x] **REQ-3.2**: Automated ArUco / AprilTag fiducial marker detection on concrete surfaces for zero-touch metric calibration.
+- [x] **REQ-3.3**: Interactive caliper tool allowing inspectors to click anywhere on a crack to measure localized aperture width.
 
 ### Phase 3: Centralized Database & Team Collaboration
-- [ ] **REQ-4.1**: SQLite / PostgreSQL database schema for assets, surveys, and defect records.
-- [ ] **REQ-4.2**: RESTful CRUD endpoints for historical inspection management.
-- [ ] **REQ-4.3**: PDF export generation on the backend (using ReportLab or WeasyPrint).
-- [ ] **REQ-4.4**: Batch image inspection upload for high-volume drone and terrestrial surveys.
+- [x] **REQ-4.1**: SQLite / PostgreSQL database schema for assets, surveys, and defect records.
+- [x] **REQ-4.2**: RESTful CRUD endpoints for historical inspection management.
+- [x] **REQ-4.3**: PDF export generation on the backend (using ReportLab Platypus).
+- [x] **REQ-4.4**: Batch image inspection upload for high-volume terrestrial and drone surveys.

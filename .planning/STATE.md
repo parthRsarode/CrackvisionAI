@@ -3,9 +3,9 @@
 ## Current Status
 
 - **Project**: CrackVision AI (Civil Infrastructure Crack Assessment System)
-- **Active Milestone**: Milestone 2 (v2.0 Real Computer Vision & Metric Calibration)
-- **Current Phase**: Phase 03 (YOLOv8 Segmentation Pipeline Integration) — COMPLETED; Ready for Phase 04
-- **Last Updated**: 2026-09-28
+- **Active Milestone**: Milestone 2 (v2.0 Real Computer Vision & Metric Calibration) — COMPLETED
+- **Current Phase**: Phase 05 (Persistent Database, Formal PDF Generation & Batch Analysis) — COMPLETED
+- **Last Updated**: 2026-10-02
 
 ## Locked Architectural Decisions
 
@@ -16,6 +16,11 @@
 - **DEC-005**: Deep learning segmentation powered by Ultralytics YOLOv8-Seg with `retina_masks=True` and AnyIO worker thread offloading.
 - **DEC-006**: Geometric morphometry filters non-crack artifacts (aspect ratio < 1.3:1) and categorizes orientation and ACI 224R limits.
 - **DEC-007**: Dynamic SVG polygon overlay rendering in frontend with `vector-effect="non-scaling-stroke"`.
+- **DEC-008**: Optical fiducial scale detection via OpenCV `ArucoDetector` across 4x4, 5x5, 6x6 dictionaries with subpixel corner extraction and automatic `mm_per_pixel` calculation.
+- **DEC-009**: Interactive localized caliper probing using normal vector raycasting across detected fissure polygons with real-time code limit evaluations.
+- **DEC-010**: SQLite database engine managed via SQLAlchemy 2.0 with WAL journaling at `backend/data/crackvision.db`, providing persistent asset and survey history.
+- **DEC-011**: Structural Condition Assessment Reports (SCAR) compiled dynamically using ReportLab Platypus with embedded orthomosaics, caliper logs, and PE sign-off blocks.
+- **DEC-012**: High-throughput multi-image batch analysis via `POST /analyze/batch` returning aggregated survey metrics and element priority classification.
 
 ## Service Status
 

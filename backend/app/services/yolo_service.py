@@ -66,14 +66,29 @@ class YOLOv8SegmentationService:
         width, height = image.size
         img_np = np.array(image)
         gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        
+        # 1. Advanced Multi-Band Statistical Thresholding
+        # Thick/Dark cracks: Global threshold based on image statistics
+        mean_val = np.mean(blurred)
+        std_val = np.std(blurred)
+        _, thick_cracks = cv2.threshold(
+            blurred, max(mean_val - (std_val * 1.5), 30), 255, cv2.THRESH_BINARY_INV
+        )
+        
+        # Thin/Faint cracks: Adaptive threshold with a very large block size to preserve line continuity
+        thin_cracks = cv2.adaptiveThreshold(
+            blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 81, 15
+        )
+        
+        combined_mask = cv2.bitwise_or(thick_cracks, thin_cracks)
 
-        mean_bg = np.mean(gray)
-        # Isolate pixels significantly darker than background average (crack fissures)
-        dark_mask = (gray < (mean_bg - 28)).astype(np.uint8) * 255
-
-        # Morphological line closing to connect fissure segments
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-        closed = cv2.morphologyEx(dark_mask, cv2.MORPH_CLOSE, kernel)
+        # 2. Advanced Morphological Operations (Noise removal + Line connection)
+        kernel_clean = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        combined_mask = cv2.morphologyEx(combined_mask, cv2.MORPH_OPEN, kernel_clean)
+        
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+        closed = cv2.morphologyEx(combined_mask, cv2.MORPH_CLOSE, kernel_close)
 
         contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -89,8 +104,12 @@ class YOLOv8SegmentationService:
             if area > 100:
                 x, y, w_b, h_b = cv2.boundingRect(cnt)
                 major_len = max(w_b, h_b)
+                box_area = float(max(w_b * h_b, 1.0))
+                extent = area / box_area
+                
                 # Require significant major length (fissure path > 35px)
-                if major_len >= 35:
+                # Filter out watermarks (blocky text has high extent, cracks have low extent < 0.50)
+                if major_len >= 35 and extent < 0.50:
                     pts = cnt.squeeze()
                     if len(pts.shape) == 2 and len(pts) >= 4:
                         poly_pts = [[round(float(px), 2), round(float(py), 2)] for px, py in pts]
@@ -120,7 +139,9 @@ class YOLOv8SegmentationService:
 
             # 1. Primary Engine: YOLOv8 Deep Learning Adaptive Multi-Pass
             if self.is_operational():
-                passes = [conf_threshold, 0.12, 0.05, 0.03]
+                # Use the strict confidence threshold provided by the user. 
+                # Dropping to 0.03 forces the generic COCO model to hallucinate objects (like watermarks).
+                passes = [conf_threshold]
                 best_result = None
 
                 for conf in passes:

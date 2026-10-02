@@ -10,18 +10,20 @@ import io
 
 from .yolo_service import YOLOv8SegmentationService
 from .morphometry import MorphometryService
+from .calibration_service import CalibrationService
 
 logger = logging.getLogger(__name__)
 
 class CrackAnalyzer:
     """
     Primary Crack Analyzer service orchestrating deep learning YOLOv8 segmentation,
-    civil engineering morphometry, multi-factor structural evaluation, multi-standard benchmarks, and fallback execution.
+    civil engineering morphometry, spatial fiducial calibration, multi-factor structural evaluation, multi-standard benchmarks, and fallback execution.
     """
 
     def __init__(self, weights_path: Optional[str] = None):
         self.yolo_service = YOLOv8SegmentationService(weights_path)
         self.morphometry_service = MorphometryService()
+        self.calibration_service = CalibrationService()
 
     def _get_deterministic_seed(self, filename: str, file_bytes: bytes) -> int:
         """Generate deterministic seed from filename and file content for fallback"""
@@ -70,7 +72,19 @@ class CrackAnalyzer:
                 "compliance_details": empty_eval["compliance_details"],
                 "plain_language_explanation": empty_eval["plain_language_explanation"],
                 "multi_factor_metrics": empty_eval["multi_factor_metrics"],
-                "unsupported_claims_disclaimer": empty_eval["unsupported_claims_disclaimer"]
+                "unsupported_claims_disclaimer": empty_eval["unsupported_claims_disclaimer"],
+                "calibration": {
+                    "calibration_status": "uncalibrated_macro",
+                    "method": "default_macro",
+                    "marker_id": None,
+                    "marker_size_mm": None,
+                    "mean_side_px": 0.0,
+                    "marker_corners": [],
+                    "normalized_corners": [],
+                    "mm_per_pixel": 0.234,
+                    "assumed_field_width_m": 0.15,
+                    "confidence": 0.0
+                }
             }
 
         sim_polys = [[[100.0, 150.0], [450.0, 165.0], [448.0, 175.0], [98.0, 160.0]]]
@@ -111,7 +125,19 @@ class CrackAnalyzer:
             "compliance_details": morph_eval["compliance_details"],
             "plain_language_explanation": morph_eval["plain_language_explanation"],
             "multi_factor_metrics": morph_eval["multi_factor_metrics"],
-            "unsupported_claims_disclaimer": morph_eval["unsupported_claims_disclaimer"]
+            "unsupported_claims_disclaimer": morph_eval["unsupported_claims_disclaimer"],
+            "calibration": {
+                "calibration_status": "uncalibrated_macro",
+                "method": "default_macro",
+                "marker_id": None,
+                "marker_size_mm": None,
+                "mean_side_px": 0.0,
+                "marker_corners": [],
+                "normalized_corners": [],
+                "mm_per_pixel": 0.234,
+                "assumed_field_width_m": 0.15,
+                "confidence": 0.0
+            }
         }
 
     def analyze(
@@ -126,10 +152,12 @@ class CrackAnalyzer:
         previous_width_mm: Optional[float] = None,
         crack_depth_status: Optional[str] = "unknown",
         environment: Optional[str] = None,
-        standard_code: Optional[str] = "ACI"
+        standard_code: Optional[str] = "ACI",
+        marker_size_mm: Optional[float] = 50.0,
+        manual_scale_mm_per_pixel: Optional[float] = None
     ) -> Dict[str, Any]:
         """
-        Synchronously analyze image for crack defects using YOLOv8 and Multi-Factor Morphometry.
+        Synchronously analyze image for crack defects using YOLOv8, Spatial Calibration, and Multi-Factor Morphometry.
         Offloaded to thread pool by FastAPI caller.
         """
         start_time = time.perf_counter()
@@ -145,6 +173,50 @@ class CrackAnalyzer:
                 dimensions = yolo_result["dimensions"]
                 width = dimensions.get("width", 640)
                 height = dimensions.get("height", 640)
+
+                # Spatial Scale Calibration (Fiducial target or Manual calibration)
+                try:
+                    img_pil = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+                    img_np = np.array(img_pil)
+                except Exception:
+                    img_np = None
+
+                if manual_scale_mm_per_pixel and manual_scale_mm_per_pixel > 0:
+                    effective_field_width_m = float(round((manual_scale_mm_per_pixel * width) / 1000.0, 4))
+                    calib_info = {
+                        "calibration_status": "user_two_point_calibrated",
+                        "method": "manual_two_point",
+                        "marker_id": None,
+                        "marker_size_mm": None,
+                        "mean_side_px": 0.0,
+                        "marker_corners": [],
+                        "normalized_corners": [],
+                        "mm_per_pixel": float(round(manual_scale_mm_per_pixel, 4)),
+                        "assumed_field_width_m": effective_field_width_m,
+                        "confidence": 100.0
+                    }
+                elif img_np is not None:
+                    calib_info = self.calibration_service.detect_fiducial_marker(
+                        img_np,
+                        marker_size_mm=marker_size_mm or 50.0,
+                        default_field_width_m=0.15
+                    )
+                    effective_field_width_m = calib_info["assumed_field_width_m"]
+                else:
+                    default_mm_per_pixel = float(round((0.15 * 1000.0) / max(width, 1), 4))
+                    calib_info = {
+                        "calibration_status": "uncalibrated_macro",
+                        "method": "default_macro",
+                        "marker_id": None,
+                        "marker_size_mm": None,
+                        "mean_side_px": 0.0,
+                        "marker_corners": [],
+                        "normalized_corners": [],
+                        "mm_per_pixel": default_mm_per_pixel,
+                        "assumed_field_width_m": 0.15,
+                        "confidence": 0.0
+                    }
+                    effective_field_width_m = 0.15
 
                 polygons, boxes, confidences = self.morphometry_service.filter_artifacts(
                     raw_polys, raw_boxes, raw_confs
@@ -189,7 +261,8 @@ class CrackAnalyzer:
                         "compliance_details": empty_eval["compliance_details"],
                         "plain_language_explanation": empty_eval["plain_language_explanation"],
                         "multi_factor_metrics": empty_eval["multi_factor_metrics"],
-                        "unsupported_claims_disclaimer": empty_eval["unsupported_claims_disclaimer"]
+                        "unsupported_claims_disclaimer": empty_eval["unsupported_claims_disclaimer"],
+                        "calibration": calib_info
                     }
 
                 morph_metrics = self.morphometry_service.analyze_multi_factor_condition(
@@ -197,7 +270,7 @@ class CrackAnalyzer:
                     bounding_boxes=boxes,
                     image_width=width,
                     image_height=height,
-                    assumed_field_width_m=1.0,
+                    assumed_field_width_m=effective_field_width_m,
                     member_type=member_type,
                     element_criticality=element_criticality,
                     proximity_to_supports=proximity_to_supports,
@@ -238,7 +311,8 @@ class CrackAnalyzer:
                     "compliance_details": morph_metrics["compliance_details"],
                     "plain_language_explanation": morph_metrics["plain_language_explanation"],
                     "multi_factor_metrics": morph_metrics["multi_factor_metrics"],
-                    "unsupported_claims_disclaimer": morph_metrics["unsupported_claims_disclaimer"]
+                    "unsupported_claims_disclaimer": morph_metrics["unsupported_claims_disclaimer"],
+                    "calibration": calib_info
                 }
 
             except Exception as e:
@@ -270,7 +344,9 @@ def analyze_crack(
     previous_width_mm: Optional[float] = None,
     crack_depth_status: Optional[str] = "unknown",
     environment: Optional[str] = None,
-    standard_code: Optional[str] = "ACI"
+    standard_code: Optional[str] = "ACI",
+    marker_size_mm: Optional[float] = 50.0,
+    manual_scale_mm_per_pixel: Optional[float] = None
 ) -> Dict[str, Any]:
     return analyzer.analyze(
         file_bytes=file_bytes,
@@ -283,5 +359,7 @@ def analyze_crack(
         previous_width_mm=previous_width_mm,
         crack_depth_status=crack_depth_status,
         environment=environment,
-        standard_code=standard_code
+        standard_code=standard_code,
+        marker_size_mm=marker_size_mm,
+        manual_scale_mm_per_pixel=manual_scale_mm_per_pixel
     )

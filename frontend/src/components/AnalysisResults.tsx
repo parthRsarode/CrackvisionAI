@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AnalysisResult } from '../types/analysis';
 import ImagePreview from './ImagePreview';
 import SeverityBadge from './SeverityBadge';
@@ -20,16 +20,21 @@ import {
   Shield,
   Activity,
   Check,
-  Globe
+  Globe,
+  Download,
+  FileCheck
 } from 'lucide-react';
+import { exportDirectPDF } from '../services/api';
 
 interface AnalysisResultsProps {
   analysis: AnalysisResult;
   imageUrl: string;
   onReset?: () => void;
+  onUpdateAnalysis?: (updated: AnalysisResult) => void;
 }
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, onReset }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, onReset, onUpdateAnalysis }) => {
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const isDetected = analysis.status === 'crack_detected';
   const metrics = analysis.multi_factor_metrics;
   const breakdown = analysis.assessment_breakdown;
@@ -242,6 +247,64 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
                 </table>
               </div>
             )}
+
+            {/* Spatial Optical Calibration & Caliper Verification Audit (Phase 04) */}
+            <div className="mt-4 p-4 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs">
+              <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Ruler className="h-4 w-4 text-safetyOrange" />
+                  <h4 className="font-bold uppercase tracking-wider text-white">
+                    Spatial Scale Calibration & Caliper Verification Audit
+                  </h4>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                  analysis.calibration?.method === 'aruco_fiducial'
+                    ? 'bg-cyan-950 text-cyan-300 border border-cyan-700'
+                    : analysis.calibration?.method === 'manual_two_point'
+                    ? 'bg-amber-950 text-amber-300 border border-amber-700'
+                    : 'bg-slate-800 text-slate-300 border border-slate-700'
+                }`}>
+                  {analysis.calibration?.method === 'aruco_fiducial'
+                    ? `ARUCO FIDUCIAL #${analysis.calibration.marker_id ?? 0}`
+                    : analysis.calibration?.method === 'manual_two_point'
+                    ? '2-POINT USER SCALE'
+                    : 'MACRO SPEC (0.15m FOV)'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+                <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">SCALE RESOLUTION</span>
+                  <strong className="text-white">
+                    {analysis.calibration?.mm_per_pixel ? `${analysis.calibration.mm_per_pixel.toFixed(3)} mm/px` : '0.234 mm/px'}
+                  </strong>
+                </div>
+                <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">CALIBRATION METHOD</span>
+                  <strong className="text-amber-400">
+                    {analysis.calibration?.method === 'aruco_fiducial'
+                      ? 'ArUco Target (Zero-Touch)'
+                      : analysis.calibration?.method === 'manual_two_point'
+                      ? 'Manual 2-Point Datum'
+                      : 'Macro Field Assumed'}
+                  </strong>
+                </div>
+                <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">EFFECTIVE FOV</span>
+                  <strong className="text-white">
+                    {analysis.calibration?.assumed_field_width_m ? `${analysis.calibration.assumed_field_width_m.toFixed(2)} m` : '0.15 m'}
+                  </strong>
+                </div>
+                <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">CALIPER SAMPLES</span>
+                  <strong className="text-emerald-400">
+                    {analysis.caliper_samples && analysis.caliper_samples.length > 0
+                      ? `${analysis.caliper_samples.length} localized readings`
+                      : 'None taken'}
+                  </strong>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -377,11 +440,29 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
         {/* Report Actions */}
         <div className="mt-8 flex flex-col sm:flex-row gap-3 pt-5 border-t border-slate-300 no-print">
           <button
+            onClick={async () => {
+              try {
+                setIsExportingPdf(true);
+                await exportDirectPDF(analysis);
+              } catch (err: any) {
+                alert('PDF generation error: ' + (err.message || 'Server error'));
+              } finally {
+                setIsExportingPdf(false);
+              }
+            }}
+            disabled={isExportingPdf}
+            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <Download className="h-4 w-4 text-safetyOrange" />
+            <span>{isExportingPdf ? 'Compiling PDF...' : 'Download Official SCAR PDF'}</span>
+          </button>
+
+          <button
             onClick={() => window.print()}
-            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm py-2.5 px-5 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer border border-slate-700"
           >
             <Printer className="h-4 w-4" />
-            <span>Print Official Structural Report</span>
+            <span>Print Terminal View</span>
           </button>
 
           <button
@@ -389,7 +470,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
             className="flex-1 bg-safetyOrange hover:bg-orange-600 text-white font-bold text-xs sm:text-sm py-2.5 px-5 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <RefreshCw className="h-4 w-4" />
-            <span>Conduct New Asset Survey</span>
+            <span>New Asset Survey</span>
           </button>
         </div>
       </div>
@@ -403,7 +484,11 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
           Use the optical comparator card below to visually cross-verify the crack aperture against physical millimeter graduation lines.
         </p>
 
-        <ImagePreview analysis={analysis} imageUrl={imageUrl} />
+        <ImagePreview 
+          analysis={analysis} 
+          imageUrl={imageUrl} 
+          onUpdateAnalysis={onUpdateAnalysis}
+        />
       </div>
 
       {/* Official Signoff Block for Printouts */}

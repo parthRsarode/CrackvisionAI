@@ -30,12 +30,12 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-screen bg-civilDark text-white flex flex-col items-center justify-center p-6 text-center">
           <h2 className="text-2xl font-bold text-red-400 mb-2">Something went wrong</h2>
           <p className="text-gray-400 max-w-md mb-4">{this.state.error?.message}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            className="bg-cadBlue hover:bg-blueprint text-white font-medium py-2 px-6 rounded-lg transition-colors"
           >
             Reload Page
           </button>
@@ -52,7 +52,7 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <DndProvider backend={HTML5Backend}>
-          <div className="min-h-screen bg-background text-text">
+          <div className="min-h-screen bg-concrete text-steel">
             <Dashboard />
           </div>
         </DndProvider>

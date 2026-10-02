@@ -52,4 +52,12 @@ export const SAMPLE_IMAGES: SampleImage[] = [
     thumbnailUrl: '/samples/bridge_girder_crack.jpg',
     createFile: () => fetchSampleFile('/samples/bridge_girder_crack.jpg', 'bridge_girder_crack.jpg'),
   },
+  {
+    id: 'calibrated-aruco',
+    title: 'ArUco Calibrated Pier',
+    surface: 'Fiducial 50mm Datum (Positive)',
+    severity: 'high',
+    thumbnailUrl: '/samples/calibrated_aruco_crack.jpg',
+    createFile: () => fetchSampleFile('/samples/calibrated_aruco_crack.jpg', 'calibrated_aruco_crack.jpg'),
+  },
 ];

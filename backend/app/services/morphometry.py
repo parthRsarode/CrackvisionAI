@@ -52,10 +52,9 @@ class MorphometryService:
         boxes: List[List[float]],
         confidences: List[float]
     ) -> Tuple[List[List[List[float]]], List[List[float]], List[float]]:
-        """
-        Filter out non-crack artifacts such as circular tie-holes and broad shadow patches.
-        Elongated crack fissures exhibit high aspect ratios (elongation > 1.3).
-        """
+        import cv2
+        import numpy as np
+        
         filtered_polys = []
         filtered_boxes = []
         filtered_confs = []
@@ -64,13 +63,23 @@ class MorphometryService:
             x1, y1, x2, y2 = box
             w = max(abs(x2 - x1), 1.0)
             h = max(abs(y2 - y1), 1.0)
-            
             aspect_ratio = max(w, h) / min(w, h)
             area = w * h
 
+            # Reject circular / blob artifacts with low elongation and significant area (e.g. tie-holes)
             if aspect_ratio < 1.3 and area > 1000:
                 continue
 
+            poly_np = np.array(poly, dtype=np.float32)
+            poly_area = cv2.contourArea(poly_np)
+            box_area = max((x2 - x1) * (y2 - y1), 1.0)
+            extent = poly_area / box_area
+            
+            # Filter out solid rectangular blocks (like text background blocks or stamps)
+            # which have low elongation (aspect_ratio < 2.5) and high solidity (extent > 0.50).
+            if aspect_ratio < 2.5 and extent > 0.50 and area > 500:
+                continue
+            
             filtered_polys.append([[float(x), float(y)] for x, y in poly])
             filtered_boxes.append([float(x1), float(y1), float(x2), float(y2)])
             filtered_confs.append(float(conf))
@@ -85,11 +94,30 @@ class MorphometryService:
         angle_deg = math.degrees(math.atan2(dy, max(dx, 1e-4)))
 
         if angle_deg < 30:
-            return "Horizontal settlement / flexural crack"
+            return "Horizontal settlement crack"
         elif angle_deg < 60:
             return "Diagonal shear crack"
         else:
-            return "Vertical shrinkage / flexural crack"
+            return "Vertical shrinkage crack"
+
+    def estimate_aperture_and_severity(
+        self,
+        polygons: List[List[List[float]]],
+        image_width: int,
+        image_height: int,
+        assumed_field_width_m: float = 1.0
+    ) -> Dict[str, Any]:
+        """
+        Backwards-compatible wrapper around analyze_multi_factor_condition.
+        """
+        return self.analyze_multi_factor_condition(
+            polygons=polygons,
+            bounding_boxes=[],
+            image_width=image_width,
+            image_height=image_height,
+            assumed_field_width_m=assumed_field_width_m,
+            standard_code="ACI"
+        )
 
     def analyze_multi_factor_condition(
         self,
@@ -97,7 +125,7 @@ class MorphometryService:
         bounding_boxes: List[List[float]],
         image_width: int,
         image_height: int,
-        assumed_field_width_m: float = 1.0,
+        assumed_field_width_m: float = 0.15,
         member_type: Optional[str] = None,
         element_criticality: Optional[str] = "primary",
         proximity_to_supports: Optional[str] = "unspecified",
@@ -113,6 +141,7 @@ class MorphometryService:
             selected_standard_key = "ACI"
         standard_info = self.STANDARDS_LIMITS[selected_standard_key]
 
+        # Calibrated Optical Scale (Defaulting to 0.15m macro inspection FOV)
         mm_per_pixel = (assumed_field_width_m * 1000.0) / max(image_width, 1)
 
         if not polygons:

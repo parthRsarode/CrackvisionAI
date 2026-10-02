@@ -1,20 +1,25 @@
 import { useState, useCallback, useRef } from 'react';
-import { AnalysisResult } from '../types/analysis';
-import Navbar from '../components/Navbar';
-import Hero from '../components/Hero';
-import ImageUploader from '../components/ImageUploader';
-import AnalysisLoader from '../components/AnalysisLoader';
-import AnalysisResults from '../components/AnalysisResults';
-import AnalysisHistory from '../components/AnalysisHistory';
-import Footer from '../components/Footer';
-import HowItWorksModal from '../components/HowItWorksModal';
-import AboutModal from '../components/AboutModal';
-import { analyzeImage, AnalysisMetadata } from '../services/api';
+import { AnalysisResult, BatchAnalysisResponse } from '../types/analysis';
+import {
+  Navbar,
+  Hero,
+  ImageUploader,
+  AnalysisLoader,
+  AnalysisResults,
+  BatchAnalysisView,
+  AnalysisHistory,
+  Footer,
+  HowItWorksModal,
+  AboutModal
+} from '../components';
+import { analyzeImage, analyzeBatchImages, AnalysisMetadata } from '../services/api';
 import { SampleImage } from '../data/sampleImages';
 
 const Dashboard: React.FC = () => {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [batchResponse, setBatchResponse] = useState<BatchAnalysisResponse | null>(null);
+  const [batchThumbnails, setBatchThumbnails] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [presetFile, setPresetFile] = useState<File | null>(null);
@@ -39,6 +44,7 @@ const Dashboard: React.FC = () => {
 
       saveToHistory(enhancedResult);
 
+      setBatchResponse(null);
       setAnalysis(result);
       setImageUrl(thumbnail);
 
@@ -47,6 +53,32 @@ const Dashboard: React.FC = () => {
       }, 100);
     } catch (err: any) {
       setError(err.message || 'Vision inspection failed. Ensure local API service is active on port 8000.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleBatchAnalyze = useCallback(async (files: File[], metadata?: AnalysisMetadata) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await analyzeBatchImages(files, metadata);
+      const thumbs = files.map((f) => URL.createObjectURL(f));
+      setBatchThumbnails(thumbs);
+      setBatchResponse(response);
+      setAnalysis(null);
+      setImageUrl(null);
+
+      // Save each batch result to local history cache
+      response.results.forEach((res, i) => {
+        saveToHistory({ ...res, thumbnail: thumbs[i] || '' });
+      });
+
+      setTimeout(() => {
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+      }, 100);
+    } catch (err: any) {
+      setError(err.message || 'Batch survey inspection failed.');
     } finally {
       setIsLoading(false);
     }
@@ -64,10 +96,13 @@ const Dashboard: React.FC = () => {
 
   const handleRemoveImage = useCallback(() => {
     if (imageUrl) URL.revokeObjectURL(imageUrl);
+    batchThumbnails.forEach((t) => URL.revokeObjectURL(t));
     setImageUrl(null);
     setAnalysis(null);
+    setBatchResponse(null);
+    setBatchThumbnails([]);
     setPresetFile(null);
-  }, [imageUrl]);
+  }, [imageUrl, batchThumbnails]);
 
   const saveToHistory = (item: AnalysisResult & { thumbnail: string }) => {
     try {
@@ -95,7 +130,9 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cad-grid text-slate-900 flex flex-col font-sans selection:bg-safetyOrange selection:text-white">
+    <div className="min-h-screen bg-cad-grid text-slate-900 flex flex-col font-sans selection:bg-safetyOrange selection:text-white relative overflow-hidden">
+      <div className="ambient-glow"></div>
+      
       {/* Top Header */}
       <Navbar
         onOpenHowItWorks={() => setIsHowItWorksOpen(true)}
@@ -107,7 +144,7 @@ const Dashboard: React.FC = () => {
       />
 
       {/* Main Terminal Container */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-4">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-4 relative z-10">
         {/* Field Scope / Hero */}
         <Hero 
           onUploadClick={scrollToUpload} 
@@ -135,12 +172,30 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* CAD Dropzone (Visible when ready for new survey) */}
-        {!isLoading && !analysis && (
-          <div ref={uploadSectionRef} className="py-2 scroll-mt-20">
+        {!isLoading && !analysis && !batchResponse && (
+          <div ref={uploadSectionRef} className="py-2 scroll-mt-20 animate-enter stagger-5">
             <ImageUploader
               onAnalyze={handleAnalyze}
+              onBatchAnalyze={handleBatchAnalyze}
               onRemove={handleRemoveImage}
               presetFile={presetFile}
+            />
+          </div>
+        )}
+
+        {/* Multi-Image Batch Summary View (Phase 05 REQ-4.4) */}
+        {!isLoading && batchResponse && !analysis && (
+          <div className="py-4">
+            <BatchAnalysisView
+              summary={batchResponse.summary}
+              results={batchResponse.results}
+              thumbnails={batchThumbnails}
+              onSelectResult={(result, thumb) => {
+                setAnalysis(result);
+                setImageUrl(thumb);
+                window.scrollTo({ top: 120, behavior: 'smooth' });
+              }}
+              onReset={handleRemoveImage}
             />
           </div>
         )}
@@ -148,10 +203,27 @@ const Dashboard: React.FC = () => {
         {/* SCAR Condition Report View */}
         {!isLoading && analysis && imageUrl && (
           <div className="py-4">
+            {batchResponse && (
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    setAnalysis(null);
+                    setImageUrl(null);
+                  }}
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-mono text-xs font-bold rounded flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span>← Back to Aggregated Batch Survey ({batchResponse.results.length} Elements)</span>
+                </button>
+              </div>
+            )}
             <AnalysisResults
               analysis={analysis}
               imageUrl={imageUrl}
               onReset={handleRemoveImage}
+              onUpdateAnalysis={(updated) => {
+                setAnalysis(updated);
+                saveToHistory({ ...updated, thumbnail: imageUrl });
+              }}
             />
           </div>
         )}

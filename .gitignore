@@ -52,3 +52,24 @@ test-reports/
 *.pt
 *.pth
 *.onnx
+!backend/app/weights/crack_yolov8s_seg.pt
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+backend/data/*.db
+
+# Temporary & Scratch
+scratch/
+.system_generated/
+
+# AI Agent & Assistant Workspace Files
+.agents/
+.claude/
+.codex/
+.impeccable/
+skills-lock.json

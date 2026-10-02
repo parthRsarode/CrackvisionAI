@@ -39,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenHowItWorks, onOpenAbout, onHomeCl
             <span>DOT & STRUCTURAL HEALTH INSPECTION TERMINAL</span>
           </span>
           <span className="hidden md:inline text-slate-600">|</span>
-          <span className="hidden md:inline text-slate-400">Spec: ACI 224R-01 / ASTM C823 / FHWA-BIRM</span>
+          <span className="hidden md:inline text-slate-400">Specs: ACI 224R / Eurocode 2 / IS 456 / BS 8110</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -65,10 +65,10 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenHowItWorks, onOpenAbout, onHomeCl
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl font-black tracking-tight text-white uppercase font-sans">
-                CrackVision <span className="text-safetyOrange font-bold">CIVIL</span>
+                CrackVision <span className="text-safetyOrange font-bold">AI</span>
               </span>
               <span className="text-[10px] font-mono font-bold bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
-                ACI-224R
+                MULTI-CODE
               </span>
             </div>
             <p className="text-[11px] text-slate-300 tracking-wide font-sans">
@@ -81,7 +81,7 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenHowItWorks, onOpenAbout, onHomeCl
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={onOpenHowItWorks}
-            className="flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
+            className="flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors duration-200 ease-out active:scale-[0.97] border border-transparent hover:border-slate-700"
           >
             <BookOpen className="h-4 w-4 text-safetyOrange" />
             <span className="hidden sm:inline">Field Manual</span>
@@ -89,15 +89,15 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenHowItWorks, onOpenAbout, onHomeCl
 
           <button
             onClick={onOpenAbout}
-            className="flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700"
+            className="flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors duration-200 ease-out active:scale-[0.97] border border-transparent hover:border-slate-700"
           >
             <FileSpreadsheet className="h-4 w-4 text-safetyOrange" />
-            <span className="hidden sm:inline">ACI Criteria</span>
+            <span className="hidden sm:inline">Code Criteria</span>
           </button>
 
           <button
             onClick={onHomeClick}
-            className="bg-safetyOrange hover:bg-orange-600 text-white font-bold text-xs sm:text-sm px-4 py-1.5 rounded-md shadow-sm transition-colors"
+            className="bg-safetyOrange hover:bg-orange-600 text-white font-bold text-xs sm:text-sm px-4 py-1.5 rounded-md shadow-sm transition-colors duration-200 ease-out active:scale-[0.97]"
           >
             + New Inspection
           </button>

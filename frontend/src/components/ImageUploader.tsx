@@ -5,15 +5,18 @@ import { AnalysisMetadata } from '../services/api';
 
 interface ImageUploaderProps {
   onAnalyze: (file: File, metadata?: AnalysisMetadata) => Promise<void>;
+  onBatchAnalyze?: (files: File[], metadata?: AnalysisMetadata) => Promise<void>;
   onRemove: () => void;
   presetFile?: File | null;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, presetFile }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onBatchAnalyze, onRemove, presetFile }) => {
   const [file, setFile] = useState<File | null>(presetFile || null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     presetFile ? URL.createObjectURL(presetFile) : null
   );
+  const [batchFiles, setBatchFiles] = useState<File[]>([]);
+  const [batchPreviewUrls, setBatchPreviewUrls] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -51,24 +54,47 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
     ? (customEnvironment.trim() || 'Custom Environment')
     : environmentSelect;
 
-  const handleFile = (newFile: File) => {
-    if (!validTypes.includes(newFile.type)) {
-      setError('Unsupported file format. Please upload a standard photo (JPG, PNG, or WEBP).');
-      return;
+  const handleFiles = (newFiles: File[]) => {
+    const validFiles: File[] = [];
+    for (const f of newFiles) {
+      if (!validTypes.includes(f.type)) {
+        setError(`"${f.name}" has an unsupported format. Please upload JPG, PNG, or WEBP.`);
+        return;
+      }
+      if (f.size > maxSizeInBytes) {
+        setError(`"${f.name}" exceeds the 15MB limit.`);
+        return;
+      }
+      validFiles.push(f);
     }
-    if (newFile.size > maxSizeInBytes) {
-      setError(`File size exceeds 15MB limit.`);
-      return;
-    }
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+    if (validFiles.length === 0) return;
+
     setError(null);
-    setFile(newFile);
-    setPreviewUrl(URL.createObjectURL(newFile));
+
+    // If multiple files or already have batch files, add to batch mode
+    if (validFiles.length > 1 || batchFiles.length > 0) {
+      const combined = [...batchFiles, ...validFiles];
+      setBatchFiles(combined);
+      const urls = combined.map((f) => URL.createObjectURL(f));
+      setBatchPreviewUrls(urls);
+      setFile(null);
+      setPreviewUrl(null);
+    } else {
+      // Single file
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setFile(validFiles[0]);
+      setPreviewUrl(URL.createObjectURL(validFiles[0]));
+      setBatchFiles([]);
+      setBatchPreviewUrls([]);
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (selected) handleFile(selected);
+    const selected = e.target.files;
+    if (selected && selected.length > 0) {
+      handleFiles(Array.from(selected));
+    }
     e.target.value = '';
   };
 
@@ -77,11 +103,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
     e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
+      handleFiles(Array.from(e.dataTransfer.files));
     }
   };
 
-  const handleRemove = () => {
+  const handleRemoveSingle = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(null);
     setPreviewUrl(null);
@@ -89,14 +115,52 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
     onRemove();
   };
 
-  const handleAnalyze = async () => {
-    if (!file) return;
-    setIsAnalyzing(true);
+  const handleRemoveBatchItem = (index: number) => {
+    const newFiles = [...batchFiles];
+    newFiles.splice(index, 1);
+    setBatchFiles(newFiles);
+
+    const newUrls = [...batchPreviewUrls];
+    if (newUrls[index]) URL.revokeObjectURL(newUrls[index]);
+    newUrls.splice(index, 1);
+    setBatchPreviewUrls(newUrls);
+
+    if (newFiles.length === 1) {
+      setFile(newFiles[0]);
+      setPreviewUrl(newUrls[0]);
+      setBatchFiles([]);
+      setBatchPreviewUrls([]);
+    } else if (newFiles.length === 0) {
+      handleClearBatch();
+    }
+  };
+
+  const handleClearBatch = () => {
+    batchPreviewUrls.forEach((u) => URL.revokeObjectURL(u));
+    setBatchFiles([]);
+    setBatchPreviewUrls([]);
     setError(null);
+    onRemove();
+  };
 
+  const handleQueueAllBenchmarks = async () => {
+    try {
+      const loaded: File[] = [];
+      for (const sample of SAMPLE_IMAGES) {
+        const res = await fetch(sample.url);
+        const blob = await res.blob();
+        const f = new File([blob], `${sample.id}.jpg`, { type: 'image/jpeg' });
+        loaded.push(f);
+      }
+      handleFiles(loaded);
+    } catch {
+      setError('Could not queue benchmark set.');
+    }
+  };
+
+  const buildMetadata = (): AnalysisMetadata => {
     const prevWidthNum = previousWidthMm.trim() ? parseFloat(previousWidthMm) : null;
-
-    const metadata: AnalysisMetadata = {
+    return {
       memberType: effectiveComponent,
       environment: effectiveEnvironment,
       elementCriticality,
@@ -107,11 +171,35 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
       previousWidthMm: prevWidthNum && !isNaN(prevWidthNum) ? prevWidthNum : null,
       standardCode
     };
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    setIsAnalyzing(true);
+    setError(null);
+
+    const metadata = buildMetadata();
 
     try {
       await onAnalyze(file, metadata);
     } catch (err: any) {
       setError(err.message || 'Analysis failed. Ensure the AI vision server is active.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleBatchAnalyze = async () => {
+    if (batchFiles.length === 0 || !onBatchAnalyze) return;
+    setIsAnalyzing(true);
+    setError(null);
+
+    const metadata = buildMetadata();
+
+    try {
+      await onBatchAnalyze(batchFiles, metadata);
+    } catch (err: any) {
+      setError(err.message || 'Batch analysis failed.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -332,8 +420,87 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
             : 'border-dashed border-slate-300 hover:border-slate-400 bg-slate-50/50'
         }`}
       >
-        {file && previewUrl ? (
-          /* Preview State */
+        {batchFiles.length > 0 ? (
+          /* Batch Queue Preview State */
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-between w-full max-w-3xl mb-3 pb-2 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-safetyOrange" />
+                <h4 className="text-xs font-bold font-mono uppercase text-slate-800">
+                  Batch Inspection Queue ({batchFiles.length} Structural Elements)
+                </h4>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs font-mono font-bold text-slate-700 hover:text-safetyOrange flex items-center gap-1"
+                >
+                  + Add More Images
+                </button>
+                <span className="text-slate-300">|</span>
+                <button
+                  onClick={handleClearBatch}
+                  className="text-xs font-mono text-rose-600 hover:underline"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            {/* Grid of queued image cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl mb-5">
+              {batchFiles.map((bFile, idx) => (
+                <div 
+                  key={idx} 
+                  className="relative group border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs"
+                >
+                  <div className="aspect-video bg-slate-900 overflow-hidden">
+                    <img
+                      src={batchPreviewUrls[idx]}
+                      alt={bFile.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-2 text-left">
+                    <p className="text-[11px] font-mono font-bold text-slate-800 truncate" title={bFile.name}>
+                      {bFile.name}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-mono">
+                      {(bFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveBatchItem(idx)}
+                    className="absolute top-1 right-1 bg-slate-900/80 hover:bg-rose-600 text-white p-1 rounded-full opacity-80 group-hover:opacity-100 transition-opacity"
+                    title="Remove from batch"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Execute Batch Action */}
+            <button
+              onClick={handleBatchAnalyze}
+              disabled={isAnalyzing}
+              className="bg-safetyOrange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-md shadow-md transition-colors duration-200 ease-out active:scale-[0.97] flex items-center gap-2.5 text-sm uppercase tracking-wider font-mono disabled:opacity-50 cursor-pointer"
+            >
+              {isAnalyzing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Executing Batch Scan Across {batchFiles.length} Elements...</span>
+                </>
+              ) : (
+                <>
+                  <Layers className="h-4 w-4" />
+                  <span>Execute Multi-Image Batch Assessment ({batchFiles.length} Images)</span>
+                </>
+              )}
+            </button>
+          </div>
+        ) : file && previewUrl ? (
+          /* Single Image Preview State */
           <div className="flex flex-col items-center">
             <div className="relative mb-4 max-w-lg w-full group border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm">
               <div className="absolute top-2 left-2 z-10 bg-slate-900/80 text-white font-mono text-[10px] px-2 py-0.5 rounded flex items-center gap-1">
@@ -348,7 +515,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
               />
 
               <button
-                onClick={handleRemove}
+                onClick={handleRemoveSingle}
                 className="absolute top-2 right-2 bg-slate-900/80 hover:bg-rose-600 text-white p-1.5 rounded-full transition-colors cursor-pointer"
                 title="Discard image"
               >
@@ -374,24 +541,34 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
               </span>
             </div>
 
-            {/* Run Analysis Action Button */}
-            <button
-              onClick={handleAnalyze}
-              disabled={isAnalyzing}
-              className="bg-safetyOrange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-md shadow-md transition-colors flex items-center gap-2.5 text-sm uppercase tracking-wider font-mono disabled:opacity-50 cursor-pointer"
-            >
-              {isAnalyzing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Executing YOLO Multi-Factor Assessment...</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4" />
-                  <span>Execute Structural Condition Assessment</span>
-                </>
-              )}
-            </button>
+            {/* Actions */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="bg-safetyOrange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-md shadow-md transition-colors duration-200 ease-out active:scale-[0.97] flex items-center gap-2.5 text-sm uppercase tracking-wider font-mono disabled:opacity-50 cursor-pointer"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Executing YOLO Multi-Factor Assessment...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    <span>Execute Structural Condition Assessment</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold py-3 px-4 rounded-md transition-colors text-xs uppercase tracking-wider font-mono cursor-pointer flex items-center gap-1.5"
+              >
+                <Layers className="h-4 w-4 text-safetyOrange" />
+                <span>+ Add to Batch</span>
+              </button>
+            </div>
           </div>
         ) : (
           /* Empty Dropzone State */
@@ -400,21 +577,33 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
               <Upload className="h-6 w-6" />
             </div>
             <h4 className="text-sm font-bold text-slate-900 font-mono uppercase mb-1">
-              Upload Concrete or Asphalt Inspection Image
+              Upload Concrete or Asphalt Inspection Image(s)
             </h4>
             <p className="text-xs text-slate-600 mb-4 max-w-md mx-auto font-sans">
-              Drag & drop a high-resolution photo or select a sample benchmark file below (JPG, PNG, WEBP up to 15MB).
+              Drag & drop single photo or multiple survey images for batch assessment (JPG, PNG, WEBP up to 15MB each).
             </p>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold font-mono py-2 px-4 rounded border border-slate-700 transition-colors cursor-pointer"
-            >
-              Select Image File
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold font-mono py-2 px-4 rounded border border-slate-700 transition-colors cursor-pointer"
+              >
+                Select Image(s) File
+              </button>
+              <button
+                onClick={handleQueueAllBenchmarks}
+                className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold font-mono py-2 px-4 rounded transition-colors cursor-pointer flex items-center gap-1.5"
+                title="Queue all 4 benchmark cases for a multi-image test run"
+              >
+                <Layers className="h-3.5 w-3.5 text-safetyOrange" />
+                <span>Batch Benchmark Test (All 4)</span>
+              </button>
+            </div>
+
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileSelect}
               className="hidden"
@@ -423,7 +612,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
             {/* Benchmark Samples */}
             <div className="mt-6 pt-5 border-t border-slate-200">
               <span className="text-[11px] font-mono font-bold text-slate-500 uppercase block mb-2.5">
-                Or choose a preset benchmark case:
+                Or inspect an individual preset benchmark case:
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-2xl mx-auto">
                 {SAMPLE_IMAGES.map((sample) => (
@@ -434,12 +623,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onAnalyze, onRemove, pres
                         const res = await fetch(sample.url);
                         const blob = await res.blob();
                         const sampleFile = new File([blob], `${sample.id}.jpg`, { type: 'image/jpeg' });
-                        handleFile(sampleFile);
+                        handleFiles([sampleFile]);
                       } catch (err) {
                         setError('Failed to load benchmark sample.');
                       }
                     }}
-                    className="p-2 border border-slate-200 hover:border-safetyOrange bg-white rounded text-left transition-all hover:shadow-xs group cursor-pointer"
+                    className="p-2 border border-slate-200 hover:border-safetyOrange bg-white rounded text-left transition-colors duration-200 ease-out active:scale-[0.97] hover:shadow-xs group cursor-pointer"
                   >
                     <div className="aspect-video bg-slate-100 rounded mb-1.5 overflow-hidden">
                       <img src={sample.url} alt={sample.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />

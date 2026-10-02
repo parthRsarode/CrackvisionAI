@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 text-white font-bold text-sm font-sans mb-2">
               <Building2 className="h-4 w-4 text-safetyOrange" />
-              <span>CrackVision Civil Engineering System</span>
+              <span>CrackVision AI</span>
             </div>
             <p className="text-slate-400 text-xs font-sans leading-relaxed">
               Standardized Computer Vision & Quantitative Morphometry for Concrete Infrastructure & Bridge Asset Management.
@@ -21,10 +21,10 @@ const Footer: React.FC = () => {
               Governing Technical Standards
             </span>
             <ul className="space-y-1 text-[11px] text-slate-400 font-sans">
-              <li>• ACI 224R-01: Control of Cracking in Concrete Structures</li>
-              <li>• ASTM C823: Standard Practice for Concrete Examination</li>
-              <li>• AASHTO Manual for Bridge Evaluation (MBE, 3rd Ed.)</li>
-              <li>• FHWA Bridge Inspector's Reference Manual (BIRM)</li>
+              <li>• ACI 224R-01: Control of Cracking in Concrete (USA)</li>
+              <li>• Eurocode 2 (EN 1992): Design of Concrete Structures (EU)</li>
+              <li>• IS 456:2000: Plain and Reinforced Concrete (IND)</li>
+              <li>• BS 8110: Structural Use of Concrete (UK)</li>
             </ul>
           </div>
 
@@ -39,7 +39,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500">
-          <span>CrackVision Civil &copy; {new Date().getFullYear()} • Operational Structural Health Portal</span>
+          <span>CrackVision AI &copy; {new Date().getFullYear()} • Operational Structural Health Portal</span>
           <span className="mt-2 sm:mt-0 font-mono">Terminal Engine: Python FastAPI / PyTorch / React 18</span>
         </div>
       </div>

@@ -9,15 +9,15 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ onUploadClick, onSelectSample }) => {
   return (
-    <section className="pt-8 pb-6 border-b border-slate-300 mb-6">
+    <section className="pt-8 pb-6 border-b border-slate-300 mb-6 animate-enter stagger-1">
       {/* Field Inspection Identification Tag */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 animate-enter stagger-2">
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-1 bg-slate-200 text-slate-800 rounded font-mono text-xs font-bold border border-slate-300">
             SURVEY TERMINAL v2.4
           </span>
           <span className="text-xs text-slate-600 font-mono">
-            REF: ACI 224R-01 / ASTM C823-00 (Concrete Distress Evaluation)
+            REF: ACI / EC2 / IS 456 / BS 8110
           </span>
         </div>
 
@@ -28,22 +28,22 @@ const Hero: React.FC<HeroProps> = ({ onUploadClick, onSelectSample }) => {
       </div>
 
       {/* Main Title */}
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3 font-sans">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3 font-sans animate-enter stagger-3">
         Concrete Crack Survey & Quantitative Aperture Assessment
       </h1>
 
       {/* Field Scope Description */}
-      <p className="text-sm sm:text-base text-slate-700 max-w-4xl mb-6 leading-relaxed">
+      <p className="text-sm sm:text-base text-slate-700 max-w-4xl mb-6 leading-relaxed animate-enter stagger-4">
         Upload high-resolution field photographs of bridge decks, substructure piers, retaining walls, or concrete pavements. 
         The system isolates micro-fractures, calculates maximum aperture width in millimeters, and cross-references 
-        <strong className="text-slate-900"> ACI 224R-01 exposure thresholds</strong> to prescribe civil repair specifications.
+        <strong className="text-slate-900"> selected global code exposure thresholds</strong> to prescribe civil repair specifications.
       </p>
 
       {/* Fast Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6 animate-enter stagger-5">
         <button
           onClick={onUploadClick}
-          className="bg-safetyOrange hover:bg-orange-600 text-white font-bold text-sm px-6 py-2.5 rounded-lg shadow-sm transition-all flex items-center gap-2 focus:ring-2 focus:ring-safetyOrange focus:ring-offset-2"
+          className="bg-safetyOrange hover:bg-orange-600 text-white font-bold text-sm px-6 py-2.5 rounded-lg shadow-sm transition-colors duration-200 ease-out active:scale-[0.97] flex items-center gap-2 focus:ring-2 focus:ring-safetyOrange focus:ring-offset-2"
         >
           <ArrowDownCircle className="h-4 w-4" />
           <span>Upload Field Surface Photo</span>
@@ -67,7 +67,7 @@ const Hero: React.FC<HeroProps> = ({ onUploadClick, onSelectSample }) => {
             <button
               key={sample.id}
               onClick={() => onSelectSample(sample)}
-              className="flex items-center gap-3 p-2.5 rounded-lg bg-white hover:bg-amber-50/60 border border-slate-300 hover:border-safetyOrange text-left transition-all group shadow-sm"
+              className="flex items-center gap-3 p-2.5 rounded-lg bg-white hover:bg-amber-50/60 border border-slate-300 hover:border-safetyOrange text-left transition-colors duration-200 ease-out active:scale-[0.97] group shadow-sm"
             >
               <img 
                 src={sample.thumbnailUrl} 
