@@ -38,6 +38,10 @@ class YOLOv8SegmentationService:
         custom_weights = Path(__file__).parent.parent / "weights" / "crack_yolov8s_seg.pt"
         if custom_weights.exists():
             return str(custom_weights)
+
+        pretrained = Path(__file__).parent.parent / "weights" / "pretrained_crack_yolov8s_seg.pt"
+        if pretrained.exists():
+            return str(pretrained)
             
         return "yolov8n-seg.pt"
 
@@ -139,9 +143,10 @@ class YOLOv8SegmentationService:
 
             # 1. Primary Engine: YOLOv8 Deep Learning Adaptive Multi-Pass
             if self.is_operational():
-                # Use the strict confidence threshold provided by the user. 
-                # Dropping to 0.03 forces the generic COCO model to hallucinate objects (like watermarks).
+                # Adaptive sensitivity: evaluate at requested threshold, then try 0.15 pass if needed
                 passes = [conf_threshold]
+                if conf_threshold > 0.15:
+                    passes.append(0.15)
                 best_result = None
 
                 for conf in passes:

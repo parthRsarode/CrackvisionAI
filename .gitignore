@@ -73,3 +73,7 @@ scratch/
 .codex/
 .impeccable/
 skills-lock.json
+
+# Datasets and Training Artifacts
+backend/datasets/
+runs/
