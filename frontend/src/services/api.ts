@@ -12,25 +12,59 @@ export interface AnalysisMetadata {
   crackDepthStatus?: string;
   environment?: string;
   standardCode?: string;
+
+  // Building & Asset Profile
+  buildingName?: string;
+  buildingType?: string;
+  constructionYear?: number | null;
+  ageVerification?: string;
+  inspectionDate?: string;
+  structuralSystem?: string;
+  structuralMaterial?: string;
+  maintenanceCondition?: string;
+  environmentalExposure?: string;
+  previousRepairs?: string;
+  waterLeakage?: boolean;
+  knownSettlement?: boolean;
+  damagingEvent?: boolean;
 }
+
+const appendMetadataToFormData = (formData: FormData, metadata?: AnalysisMetadata) => {
+  if (!metadata) return;
+  if (metadata.memberType) formData.append('member_type', metadata.memberType);
+  if (metadata.elementCriticality) formData.append('element_criticality', metadata.elementCriticality);
+  if (metadata.proximityToSupports) formData.append('proximity_to_supports', metadata.proximityToSupports);
+  if (metadata.visibleSpalling !== undefined) formData.append('visible_spalling', String(metadata.visibleSpalling));
+  if (metadata.visibleCorrosion !== undefined) formData.append('visible_corrosion', String(metadata.visibleCorrosion));
+  if (metadata.previousWidthMm !== undefined && metadata.previousWidthMm !== null) {
+    formData.append('previous_width_mm', String(metadata.previousWidthMm));
+  }
+  if (metadata.crackDepthStatus) formData.append('crack_depth_status', metadata.crackDepthStatus);
+  if (metadata.environment) formData.append('environment', metadata.environment);
+  if (metadata.standardCode) formData.append('standard_code', metadata.standardCode);
+
+  // Building Profile fields
+  if (metadata.buildingName) formData.append('building_name', metadata.buildingName);
+  if (metadata.buildingType) formData.append('building_type', metadata.buildingType);
+  if (metadata.constructionYear !== undefined && metadata.constructionYear !== null) {
+    formData.append('construction_year', String(metadata.constructionYear));
+  }
+  if (metadata.ageVerification) formData.append('age_verification', metadata.ageVerification);
+  if (metadata.inspectionDate) formData.append('inspection_date', metadata.inspectionDate);
+  if (metadata.structuralSystem) formData.append('structural_system', metadata.structuralSystem);
+  if (metadata.structuralMaterial) formData.append('structural_material', metadata.structuralMaterial);
+  if (metadata.maintenanceCondition) formData.append('maintenance_condition', metadata.maintenanceCondition);
+  if (metadata.environmentalExposure) formData.append('environmental_exposure', metadata.environmentalExposure);
+  if (metadata.previousRepairs) formData.append('previous_repairs', metadata.previousRepairs);
+  if (metadata.waterLeakage !== undefined) formData.append('water_leakage', String(metadata.waterLeakage));
+  if (metadata.knownSettlement !== undefined) formData.append('known_settlement', String(metadata.knownSettlement));
+  if (metadata.damagingEvent !== undefined) formData.append('damaging_event', String(metadata.damagingEvent));
+};
 
 export const analyzeImage = async (file: File, metadata?: AnalysisMetadata): Promise<AnalysisResult> => {
   const formData = new FormData();
   formData.append('file', file);
-
-  if (metadata) {
-    if (metadata.memberType) formData.append('member_type', metadata.memberType);
-    if (metadata.elementCriticality) formData.append('element_criticality', metadata.elementCriticality);
-    if (metadata.proximityToSupports) formData.append('proximity_to_supports', metadata.proximityToSupports);
-    if (metadata.visibleSpalling !== undefined) formData.append('visible_spalling', String(metadata.visibleSpalling));
-    if (metadata.visibleCorrosion !== undefined) formData.append('visible_corrosion', String(metadata.visibleCorrosion));
-    if (metadata.previousWidthMm !== undefined && metadata.previousWidthMm !== null) {
-      formData.append('previous_width_mm', String(metadata.previousWidthMm));
-    }
-    if (metadata.crackDepthStatus) formData.append('crack_depth_status', metadata.crackDepthStatus);
-    if (metadata.environment) formData.append('environment', metadata.environment);
-    if (metadata.standardCode) formData.append('standard_code', metadata.standardCode);
-  }
+  appendMetadataToFormData(formData, metadata);
 
   const response = await fetch(`${API_BASE_URL}/analyze`, {
     method: 'POST',
@@ -50,15 +84,7 @@ export const analyzeBatchImages = async (
 ): Promise<BatchAnalysisResponse> => {
   const formData = new FormData();
   files.forEach((f) => formData.append('files', f));
-
-  if (metadata) {
-    if (metadata.memberType) formData.append('member_type', metadata.memberType);
-    if (metadata.elementCriticality) formData.append('element_criticality', metadata.elementCriticality);
-    if (metadata.proximityToSupports) formData.append('proximity_to_supports', metadata.proximityToSupports);
-    if (metadata.visibleSpalling !== undefined) formData.append('visible_spalling', String(metadata.visibleSpalling));
-    if (metadata.visibleCorrosion !== undefined) formData.append('visible_corrosion', String(metadata.visibleCorrosion));
-    if (metadata.standardCode) formData.append('standard_code', metadata.standardCode);
-  }
+  appendMetadataToFormData(formData, metadata);
 
   const response = await fetch(`${API_BASE_URL}/analyze/batch`, {
     method: 'POST',

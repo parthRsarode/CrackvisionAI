@@ -22,7 +22,9 @@ import {
   Check,
   Globe,
   Download,
-  FileCheck
+  FileCheck,
+  Clock,
+  History
 } from 'lucide-react';
 import { exportDirectPDF } from '../services/api';
 
@@ -42,6 +44,9 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
   const evidence = analysis.evidence_sufficiency;
   const compliance = analysis.compliance_details;
 
+  const bp = analysis.building_profile;
+  const ageCtx = analysis.age_deterioration_context;
+
   const getAciLimit = () => {
     switch (analysis.severity) {
       case 'high':
@@ -54,6 +59,22 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
     }
   };
   const aciData = getAciLimit();
+
+  const getAgeStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'early_age_construction_defect_suspected':
+        return 'bg-rose-100 text-rose-900 border-rose-400 font-bold';
+      case 'potential_age_related_distress':
+      case 'further_deterioration_assessment_recommended':
+        return 'bg-amber-100 text-amber-900 border-amber-300';
+      case 'insufficient_historical_information':
+      case 'no_age_specific_conclusion_supported':
+        return 'bg-slate-100 text-slate-800 border-slate-300';
+      case 'context_documented':
+      default:
+        return 'bg-sky-100 text-sky-900 border-sky-300';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -128,6 +149,172 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
                   Missing parameters for full structural verdict: {evidence.missing_factors.join(', ')}
                 </p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Building & Asset Profile Summary */}
+        {bp && (
+          <div className="mt-5 p-4 rounded-lg bg-slate-50 border border-slate-300">
+            <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-safetyOrange" />
+                <h4 className="text-xs font-bold font-mono uppercase text-slate-900 tracking-wider">
+                  Building & Structural Asset Profile
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800">
+                {String(bp.building_type || 'Unspecified').replace('_', ' ').toUpperCase()}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Asset / Structure Name</span>
+                <strong className="text-slate-900 font-medium">{bp.building_name || 'Field Asset Component'}</strong>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Construction Year</span>
+                <strong className="text-slate-900 font-medium">{bp.construction_year ?? 'Unknown'}</strong>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Age at Inspection</span>
+                <div className="flex items-center gap-1">
+                  <strong className="text-safetyOrange font-bold">
+                    {bp.building_age_years !== undefined && bp.building_age_years !== null ? `${bp.building_age_years} yrs` : 'Unknown'}
+                  </strong>
+                  <span className="text-[10px] font-mono text-slate-500">({String(bp.age_verification || 'unknown').replace('_', ' ')})</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Structural Material</span>
+                <strong className="text-slate-900 font-medium capitalize">
+                  {bp.structural_material === 'asphalt' || bp.structural_material === 'bitumen'
+                    ? 'Asphalt / Bitumen (Road Pavement / Tar)'
+                    : bp.structural_material === 'reinforced_concrete'
+                    ? 'Reinforced Concrete (Cement with Steel Rebar)'
+                    : bp.structural_material === 'prestressed_concrete'
+                    ? 'Prestressed Concrete (PT Cables)'
+                    : bp.structural_material === 'masonry'
+                    ? 'Brickwork / Masonry (Bricks & Mortar)'
+                    : bp.structural_material === 'stone'
+                    ? 'Stone Masonry (Rock Wall)'
+                    : bp.structural_material === 'steel'
+                    ? 'Structural Steel (Metal Frame)'
+                    : String(bp.structural_material || 'reinforced_concrete').replace(/_/g, ' ')}
+                </strong>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Structural System</span>
+                <strong className="text-slate-900 font-medium capitalize">
+                  {bp.structural_system === 'road_pavement'
+                    ? 'Road Surface Course (Pavement)'
+                    : bp.structural_system === 'rc_frame'
+                    ? 'Pillar-Beam Frame (Columns & Beams)'
+                    : bp.structural_system === 'shear_wall'
+                    ? 'Solid Concrete Wall (Core Wall)'
+                    : bp.structural_system === 'flat_slab'
+                    ? 'Flat Ceiling Slab'
+                    : bp.structural_system === 'masonry_bearing'
+                    ? 'Load-Bearing Brick Wall'
+                    : bp.structural_system === 'bridge_superstructure'
+                    ? 'Bridge Deck / Girder'
+                    : String(bp.structural_system || 'unknown').replace(/_/g, ' ')}
+                </strong>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Member Importance</span>
+                <strong className="text-slate-900 font-medium capitalize">{String(bp.member_importance || 'primary')}</strong>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Environmental Exposure</span>
+                <strong className="text-slate-900 font-medium capitalize">{String(bp.environmental_exposure || 'indoor_dry').replace(/_/g, ' ')}</strong>
+              </div>
+
+              <div className="p-2.5 bg-white rounded border border-slate-200">
+                <span className="text-[10px] font-mono text-slate-500 uppercase block mb-0.5">Maintenance Condition</span>
+                <strong className="text-slate-900 font-medium capitalize">{String(bp.maintenance_condition || 'regular')}</strong>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dedicated Age & Deterioration Context Section */}
+        {ageCtx && (
+          <div className="mt-5 p-4 rounded-lg bg-slate-900 border border-slate-700 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 mb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-amber-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-amber-400">
+                  Age & Deterioration Context
+                </h4>
+              </div>
+              <span className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded font-bold border ${getAgeStatusBadge(ageCtx.status)}`}>
+                {String(ageCtx.status || 'context_documented').replace(/_/g, ' ').toUpperCase()}
+              </span>
+            </div>
+
+            {/* Context Reasoning */}
+            <p className="text-xs font-sans leading-relaxed text-slate-300 mb-3">
+              {ageCtx.engineering_reasoning}
+            </p>
+
+            {ageCtx.status === 'early_age_construction_defect_suspected' && (
+              <div className="mb-3 p-3 rounded-lg bg-rose-950/90 border-2 border-rose-500/80 text-rose-100">
+                <div className="flex items-center gap-2 font-bold font-mono text-xs uppercase text-rose-300 mb-1.5">
+                  <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                  <span>Critical Forensic Notice: Early-Age Construction Distress Suspected</span>
+                </div>
+                <p className="font-sans text-[11px] leading-relaxed text-rose-200/95 mb-2">
+                  In a structure under 5 years old, significant crack apertures in primary structural members cannot be attributed to normal long-term environmental degradation or carbonation. Under <strong>ACI 224.1R-07</strong> (Sections 1.2–1.3) and <strong>ACI CODE-562-25</strong> Section 6.2, this condition strongly indicates construction-phase anomalies.
+                </p>
+                <div className="bg-rose-900/60 p-2 rounded text-[10px] font-mono text-rose-200 space-y-1">
+                  <div>• <strong>Formwork De-shoring:</strong> Audit stripping dates against required concrete compressive/tensile strength attainment (IS 456 Cl. 11 / ACI 347).</div>
+                  <div>• <strong>Curing Quality:</strong> Check moist curing logs for plastic or thermal shrinkage restraint (ACI 308R).</div>
+                  <div>• <strong>Construction Overload:</strong> Investigate if green slabs/beams were overloaded with materials/machinery.</div>
+                  <div>• <strong>Subgrade Settlement:</strong> Inspect footings and ground beams for differential foundation settlement.</div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono mb-3">
+              <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block mb-0.5">Observed Distress Indicators</span>
+                <strong className="text-amber-300">
+                  {ageCtx.observed_deterioration_indicators && ageCtx.observed_deterioration_indicators.length > 0
+                    ? ageCtx.observed_deterioration_indicators.map((i) => String(i).replace('_', ' ')).join(', ')
+                    : 'None reported/visible'}
+                </strong>
+              </div>
+
+              <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block mb-0.5">Historical Progression</span>
+                <strong className="text-cyan-300">{ageCtx.historical_progression || 'Baseline survey'}</strong>
+              </div>
+
+              <div className="p-2 bg-slate-950 rounded border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block mb-0.5">Age Verification</span>
+                <strong className="text-slate-200 capitalize">{String(ageCtx.age_verification || 'unknown').replace('_', ' ')}</strong>
+              </div>
+            </div>
+
+            {ageCtx.missing_information && ageCtx.missing_information.length > 0 && (
+              <div className="p-2 bg-slate-800/80 rounded border border-slate-700 text-[11px] font-mono text-slate-400 mb-2.5">
+                <span className="text-amber-400 font-bold uppercase">Missing Contextual Information: </span>
+                <span>{ageCtx.missing_information.join('; ')}</span>
+              </div>
+            )}
+
+            {/* Context Disclaimer Note */}
+            <div className="p-2 bg-slate-800/90 rounded text-[11px] font-sans text-amber-200/90 italic flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-safetyOrange shrink-0" />
+              <span>{ageCtx.context_disclaimer || 'Building age is contextual information and is not, by itself, a measure of structural safety or crack severity.'}</span>
             </div>
           </div>
         )}
@@ -410,20 +597,97 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ analysis, imageUrl, o
         </div>
 
         {/* Engineering Remediation Specification */}
-        <div className="mt-6 border-2 border-slate-300 rounded-lg p-4 bg-white">
-          <div className="flex items-center gap-2 mb-2">
-            <Wrench className="h-4 w-4 text-safetyOrange" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
-              Prescribed Structural Action & Remediation Specification
-            </h4>
+        {analysis.remediation_specification ? (
+          <div className="mt-6 border-2 border-slate-300 rounded-lg p-4 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-safetyOrange" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
+                  Prescribed Structural Action & Remediation Specification
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-blue-50 text-blue-800 rounded border border-blue-200 uppercase">
+                {analysis.remediation_specification.governing_standard}
+              </span>
+            </div>
+
+            <div className="mb-3">
+              <h5 className="text-xs font-bold text-slate-900 font-mono flex items-center gap-1.5 mb-1">
+                <span>{analysis.remediation_specification.protocol_title}</span>
+              </h5>
+              <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                {analysis.recommendation}
+              </p>
+            </div>
+
+            {/* Material Formulation Specification */}
+            <div className="mb-3 p-3 bg-slate-50 rounded text-[11px] font-sans border border-slate-200">
+              <span className="text-[10px] font-mono font-bold text-slate-500 uppercase block mb-1">
+                Tailored Material Specification ({analysis.remediation_specification.structural_material}):
+              </span>
+              <p className="text-slate-800 leading-relaxed font-mono text-[11px]">
+                {analysis.remediation_specification.material_specification}
+              </p>
+            </div>
+
+            {/* Step-by-Step Prescribed Actions */}
+            {analysis.remediation_specification.prescribed_actions && analysis.remediation_specification.prescribed_actions.length > 0 && (
+              <div className="mb-3">
+                <span className="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-wider block mb-1.5">
+                  Prescribed Engineering Procedure:
+                </span>
+                <div className="space-y-1.5">
+                  {analysis.remediation_specification.prescribed_actions.map((action, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-800 bg-white p-2 rounded border border-slate-200">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-mono font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <span className="leading-snug">{action}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Equipment Required */}
+            {analysis.remediation_specification.equipment_required && analysis.remediation_specification.equipment_required.length > 0 && (
+              <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-mono font-bold text-slate-500 uppercase mr-1">Required Equipment:</span>
+                {analysis.remediation_specification.equipment_required.map((eq, i) => (
+                  <span key={i} className="text-[10px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-300">
+                    {eq}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Safety Protocol Advisory */}
+            {analysis.remediation_specification.safety_protocol && (
+              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded text-[11px] text-rose-900 font-sans">
+                <div className="flex items-center gap-1 font-bold text-[10px] font-mono uppercase text-rose-800 mb-0.5">
+                  <AlertTriangle className="h-3 w-3 text-rose-600" />
+                  <span>Site Safety & Hazard Protocol</span>
+                </div>
+                <p className="leading-relaxed">{analysis.remediation_specification.safety_protocol}</p>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-slate-800 leading-relaxed font-sans mb-3">
-            {analysis.recommendation}
-          </p>
-          <div className="p-2.5 bg-slate-100 rounded text-[11px] font-mono text-slate-600 border border-slate-200">
-            <strong>Standard Material Specification:</strong> For structural cracks &gt; 0.3mm exhibiting distress, execute pressure injection with epoxy resin complying with ASTM C881 Type I/IV Grade 1. For non-structural shrinkage, rout to 6mm×6mm and apply elastomeric polyurethane sealant.
+        ) : (
+          <div className="mt-6 border-2 border-slate-300 rounded-lg p-4 bg-white">
+            <div className="flex items-center gap-2 mb-2">
+              <Wrench className="h-4 w-4 text-safetyOrange" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 font-mono">
+                Prescribed Structural Action & Remediation Specification
+              </h4>
+            </div>
+            <p className="text-xs text-slate-800 leading-relaxed font-sans mb-3">
+              {analysis.recommendation}
+            </p>
+            <div className="p-2.5 bg-slate-100 rounded text-[11px] font-mono text-slate-600 border border-slate-200">
+              <strong>Standard Material Specification:</strong> Execute remediation strictly conforming to governing ASTM / AASHTO / TMS material specifications corresponding to the identified structural component.
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Section 10: Engineering Safety Disclaimer */}
         <div className="mt-6 p-3 bg-amber-50/90 border border-amber-300 rounded text-[11px] font-sans text-amber-950">

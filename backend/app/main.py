@@ -62,6 +62,17 @@ def safe_parse_float(val: Any) -> Optional[float]:
     except (ValueError, TypeError):
         return None
 
+def safe_parse_int(val: Any) -> Optional[int]:
+    if val is None:
+        return None
+    s = str(val).strip().lower()
+    if s in ["", "none", "null", "undefined", "nan"]:
+        return None
+    try:
+        return int(float(s))
+    except (ValueError, TypeError):
+        return None
+
 import math
 
 @app.get("/health")
@@ -87,6 +98,27 @@ async def analyze_image(
     standard_code: Optional[str] = Form("ACI"),
     marker_size_mm: Optional[Any] = Form(50.0),
     manual_scale_mm_per_pixel: Optional[Any] = Form(None),
+    # Building Profile & Age Context Inputs
+    building_name: Optional[str] = Form(None),
+    building_type: Optional[str] = Form("residential"),
+    construction_year: Optional[Any] = Form(None),
+    building_age_years: Optional[Any] = Form(None),
+    age_verification: Optional[str] = Form("unknown"),
+    inspection_date: Optional[str] = Form(None),
+    structural_system: Optional[str] = Form("unknown"),
+    structural_material: Optional[str] = Form("reinforced_concrete"),
+    member_importance: Optional[str] = Form(None),
+    repair_history: Optional[str] = Form(None),
+    last_major_inspection_date: Optional[str] = Form(None),
+    last_repair_date: Optional[str] = Form(None),
+    previous_crack_repairs: Optional[str] = Form("unknown"),
+    previous_water_leakage: Optional[Any] = Form(False),
+    known_reinforcement_corrosion: Optional[Any] = Form(False),
+    known_spalling_delamination: Optional[Any] = Form(False),
+    known_settlement: Optional[Any] = Form(False),
+    damaging_events: Optional[str] = Form("none"),
+    maintenance_condition: Optional[str] = Form("unknown"),
+    environmental_exposure: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
@@ -113,6 +145,12 @@ async def analyze_image(
     prev_width_float = safe_parse_float(previous_width_mm)
     marker_size_float = safe_parse_float(marker_size_mm) or 50.0
     manual_scale_float = safe_parse_float(manual_scale_mm_per_pixel)
+    construction_year_int = safe_parse_int(construction_year)
+    building_age_float = safe_parse_float(building_age_years)
+    prev_leakage_bool = safe_parse_bool(previous_water_leakage)
+    known_corrosion_bool = safe_parse_bool(known_reinforcement_corrosion)
+    known_spalling_bool = safe_parse_bool(known_spalling_delamination)
+    known_settlement_bool = safe_parse_bool(known_settlement)
 
     try:
         result = await anyio.to_thread.run_sync(
@@ -129,7 +167,27 @@ async def analyze_image(
             environment,
             standard_code,
             marker_size_float,
-            manual_scale_float
+            manual_scale_float,
+            building_name,
+            building_type,
+            construction_year_int,
+            building_age_float,
+            age_verification,
+            inspection_date,
+            structural_system,
+            structural_material,
+            member_importance,
+            repair_history,
+            last_major_inspection_date,
+            last_repair_date,
+            previous_crack_repairs,
+            prev_leakage_bool,
+            known_corrosion_bool,
+            known_spalling_bool,
+            known_settlement_bool,
+            damaging_events,
+            maintenance_condition,
+            environmental_exposure
         )
         try:
             SurveyRepository.save_survey(db, result)
@@ -184,6 +242,20 @@ async def analyze_batch_images(
     visible_corrosion: Optional[Any] = Form(False),
     standard_code: Optional[str] = Form("ACI"),
     marker_size_mm: Optional[Any] = Form(50.0),
+    # Building & Asset Profile
+    building_name: Optional[str] = Form(None),
+    building_type: Optional[str] = Form("unspecified"),
+    construction_year: Optional[Any] = Form(None),
+    age_verification: Optional[str] = Form("unknown"),
+    inspection_date: Optional[str] = Form(None),
+    structural_system: Optional[str] = Form("unknown"),
+    structural_material: Optional[str] = Form("reinforced_concrete"),
+    maintenance_condition: Optional[str] = Form("regular"),
+    environmental_exposure: Optional[str] = Form("indoor_dry"),
+    previous_repairs: Optional[str] = Form("unknown"),
+    water_leakage: Optional[Any] = Form(False),
+    known_settlement: Optional[Any] = Form(False),
+    damaging_event: Optional[Any] = Form(False),
     db: Session = Depends(get_db)
 ):
     if not files:
@@ -192,6 +264,10 @@ async def analyze_batch_images(
     spalling_bool = safe_parse_bool(visible_spalling)
     corrosion_bool = safe_parse_bool(visible_corrosion)
     marker_size_float = safe_parse_float(marker_size_mm) or 50.0
+    const_year_int = safe_parse_int(construction_year)
+    leakage_bool = safe_parse_bool(water_leakage)
+    settlement_bool = safe_parse_bool(known_settlement)
+    damaging_bool = safe_parse_bool(damaging_event)
 
     results = []
     total_defects = 0
@@ -215,7 +291,27 @@ async def analyze_batch_images(
             None,
             standard_code,
             marker_size_float,
-            None
+            None,
+            building_name,
+            building_type,
+            const_year_int,
+            None,  # building_age_years
+            age_verification,
+            inspection_date,
+            structural_system,
+            structural_material,
+            None,  # member_importance
+            None,  # repair_history
+            None,  # last_major_inspection_date
+            None,  # last_repair_date
+            previous_repairs,
+            leakage_bool,
+            corrosion_bool,
+            spalling_bool,
+            settlement_bool,
+            "event" if damaging_bool else "none",
+            maintenance_condition,
+            environmental_exposure
         )
         results.append(res)
 

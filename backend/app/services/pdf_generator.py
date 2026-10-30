@@ -185,7 +185,174 @@ class PDFReportGenerator:
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(sum_table)
-        elements.append(Spacer(1, 8))
+        elements.append(Spacer(1, 6))
+
+        # 2b. Building & Asset Profile Table
+        bp = survey_data.get("building_profile") or {}
+        if isinstance(bp, str):
+            import json
+            try:
+                bp = json.loads(bp)
+            except Exception:
+                bp = {}
+
+        age_ctx = survey_data.get("age_deterioration_context") or {}
+        if isinstance(age_ctx, str):
+            import json
+            try:
+                age_ctx = json.loads(age_ctx)
+            except Exception:
+                age_ctx = {}
+
+        MATERIAL_LABELS = {
+            "asphalt": "Asphalt / Bitumen (Road Pavement / Tar)",
+            "bitumen": "Asphalt / Bitumen (Road Pavement / Tar)",
+            "asphalt_concrete": "Asphalt / Bitumen (Road Pavement / Tar)",
+            "reinforced_concrete": "Reinforced Concrete (Cement with Steel Rebar)",
+            "prestressed_concrete": "Prestressed / Post-Tensioned Concrete (High-Tension Steel Cables)",
+            "masonry": "Brickwork / Stone Masonry (Clay Bricks & Mortar)",
+            "stone": "Stone Masonry / Natural Rock Wall",
+            "steel": "Structural Steel (Beams / Metal Trusses)",
+            "mixed_system": "Composite / Mixed Material (Concrete + Steel + Masonry)",
+            "unknown": "Unknown / Unspecified Material"
+        }
+        ASSET_TYPE_LABELS = {
+            "residential": "Residential Building (House / Apartment / Villa)",
+            "commercial": "Commercial (Office / Mall / Retail / Hotel)",
+            "industrial": "Industrial (Factory / Warehouse / Plant)",
+            "institutional": "Institutional (School / College / Hospital)",
+            "parking_structure": "Parking Structure (Multi-level Garage / Car Park)",
+            "bridge": "Bridge / Flyover (Highway / Overpass / Rail)",
+            "road": "Road / Highway Pavement (Street / Driveway / Runway)",
+            "culvert_tunnel": "Culvert / Tunnel / Underground Passage",
+            "water_retaining": "Water Tank / Swimming Pool / Reservoir / Dam",
+            "retaining_wall": "Retaining Wall (Earth Support / Soil Bank)",
+            "other": "Other Infrastructure"
+        }
+
+        b_name = bp.get("building_name") or survey_data.get("asset_name") or "Unnamed Structure"
+        raw_b_type = str(bp.get("building_type", "unspecified")).lower()
+        b_type = ASSET_TYPE_LABELS.get(raw_b_type, raw_b_type.replace("_", " ").title())
+        c_year = bp.get("construction_year")
+        c_year_str = str(c_year) if c_year is not None else "Unknown"
+        age_val = bp.get("building_age_years")
+        age_str = f"{age_val} yrs" if age_val is not None else "Unknown"
+        age_ver = str(bp.get("age_verification", "unknown")).replace("_", " ").title()
+        raw_mat = str(bp.get("structural_material", "reinforced_concrete")).lower()
+        mat_str = MATERIAL_LABELS.get(raw_mat, raw_mat.replace("_", " ").title())
+        sys_str = str(bp.get("structural_system", "unknown")).replace("_", " ").title()
+        insp_date_str = str(bp.get("inspection_date") or created_at_str[:10])
+
+        elements.append(Paragraph("<b>BUILDING & ASSET PROFILE</b>", style_section))
+        b_profile_data = [
+            [
+                Paragraph("<b>Structure ID / Name:</b>", style_body),
+                Paragraph(b_name, style_body_bold),
+                Paragraph("<b>Building Type:</b>", style_body),
+                Paragraph(b_type, style_body)
+            ],
+            [
+                Paragraph("<b>Construction Year:</b>", style_body),
+                Paragraph(c_year_str, style_body),
+                Paragraph("<b>Age at Inspection:</b>", style_body),
+                Paragraph(f"<b>{age_str}</b> ({age_ver})", style_body)
+            ],
+            [
+                Paragraph("<b>Structural Material:</b>", style_body),
+                Paragraph(mat_str, style_body),
+                Paragraph("<b>Structural System:</b>", style_body),
+                Paragraph(sys_str, style_body)
+            ],
+            [
+                Paragraph("<b>Inspection Date:</b>", style_body),
+                Paragraph(insp_date_str, style_body),
+                Paragraph("<b>Member Importance:</b>", style_body),
+                Paragraph(str(bp.get("member_importance", "primary")).title(), style_body)
+            ]
+        ]
+        b_table = Table(b_profile_data, colWidths=[120, 150, 120, 150])
+        b_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), cls.SLATE_LIGHT),
+            ('BOX', (0, 0), (-1, -1), 0.75, cls.SLATE_BORDER),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, cls.SLATE_BORDER),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(b_table)
+        elements.append(Spacer(1, 6))
+
+        # 2c. Age & Deterioration Context
+        ctx_status = age_ctx.get("status", "context_documented").replace("_", " ").title()
+        ctx_reason = age_ctx.get("engineering_reasoning") or (
+            "Building age provides environmental and durability context but does not independently establish severity. "
+            "Crack geometry, structural member type, and physical deterioration indicators govern condition assessment."
+        )
+        indicators = age_ctx.get("observed_deterioration_indicators") or []
+        ind_str = ", ".join([str(i).replace("_", " ").title() for i in indicators]) if indicators else "None reported/visible"
+        exposure_val = str(bp.get("environmental_exposure", "indoor_dry")).replace("_", " ").title()
+        maint_val = str(bp.get("maintenance_condition", "regular")).replace("_", " ").title()
+
+        elements.append(Paragraph("<b>AGE & DETERIORATION CONTEXT</b>", style_section))
+        ctx_table_data = [
+            [
+                Paragraph("<b>Context Evaluation:</b>", style_body),
+                Paragraph(f"<b>{ctx_status}</b>", style_body_bold),
+                Paragraph("<b>Environmental Exposure:</b>", style_body),
+                Paragraph(exposure_val, style_body)
+            ],
+            [
+                Paragraph("<b>Observed Distress:</b>", style_body),
+                Paragraph(ind_str, style_body),
+                Paragraph("<b>Maintenance State:</b>", style_body),
+                Paragraph(maint_val, style_body)
+            ],
+            [
+                Paragraph("<b>Deterioration Rationale:</b>", style_body),
+                Paragraph(ctx_reason, style_body),
+                Paragraph("<b>Historical Progression:</b>", style_body),
+                Paragraph(str(age_ctx.get("historical_progression", "Baseline reading")), style_body)
+            ]
+        ]
+        ctx_table = Table(ctx_table_data, colWidths=[120, 150, 120, 150])
+        ctx_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#f1f5f9")),
+            ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor("#94a3b8")),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(ctx_table)
+        elements.append(Spacer(1, 4))
+
+        if age_ctx.get("status") == "early_age_construction_defect_suspected":
+            alert_style = ParagraphStyle(
+                'EarlyAgeDefectAlert',
+                parent=style_callout,
+                backColor=colors.HexColor("#fff1f2"),
+                borderColor=colors.HexColor("#e11d48"),
+                textColor=colors.HexColor("#9f1239")
+            )
+            elements.append(Paragraph(
+                "<b>CRITICAL FORENSIC NOTICE — SUSPECTED EARLY-AGE CONSTRUCTION DEFECT (ACI 224.1R-07 & ACI CODE-562-25):</b><br/>"
+                "In a structure under 5 years old, significant crack apertures in primary structural elements cannot be attributed to normal long-term environmental degradation or carbonation. "
+                "Immediate forensic audit of construction-phase records is mandated: "
+                "(1) Verify 28-day cylinder/cube compressive strength tests (f'ck), "
+                "(2) Audit formwork stripping and de-shoring dates against IS 456 Cl. 11 / ACI 347, "
+                "(3) Inspect foundation elevations for differential subsoil settlement, "
+                "(4) Check curing duration and plastic/thermal shrinkage restraint logs.",
+                alert_style
+            ))
+            elements.append(Spacer(1, 4))
+
+        disclaimer_note = age_ctx.get("context_disclaimer") or (
+            "Building age is contextual information and is not, by itself, a measure of structural safety or crack severity."
+        )
+        elements.append(Paragraph(f"<i><b>Engineering Note:</b> {disclaimer_note}</i>", style_callout))
+        elements.append(Spacer(1, 6))
 
         # 3. Optional Embedded Image
         if image_bytes:
@@ -257,11 +424,36 @@ class PDFReportGenerator:
         elements.append(Spacer(1, 8))
 
         # 5. Engineering Standards & Recommendation Findings
-        elements.append(Paragraph("<b>STANDARDS COMPLIANCE & ASTM C881 REMEDIATION PROTOCOL</b>", style_section))
-        rec_text = survey_data.get("recommendation") or (
-            "Monitor crack development during scheduled inspections. Clean fissure and execute structural pressure injection with epoxy resin complying with ASTM C881 Type IV, Grade 1."
-        )
-        elements.append(Paragraph(f"<b>Remediation Protocol:</b> {rec_text}", style_body))
+        remed_spec = survey_data.get("remediation_specification")
+        if isinstance(remed_spec, dict) and remed_spec.get("protocol_title"):
+            std_title = str(remed_spec.get("governing_standard", "ENGINEERING SPECIFICATION")).upper()
+            elements.append(Paragraph(f"<b>STANDARDS COMPLIANCE & REMEDIATION SPECIFICATION ({std_title})</b>", style_section))
+            elements.append(Paragraph(f"<b>Prescribed Protocol:</b> {remed_spec.get('protocol_title')}", style_body_bold))
+            elements.append(Paragraph(f"<b>Governing Standard:</b> {remed_spec.get('governing_standard')} &nbsp;|&nbsp; <b>Material Category:</b> {remed_spec.get('structural_material', 'Reinforced Concrete')}", style_body))
+            elements.append(Paragraph(f"<b>Material Specification:</b> {remed_spec.get('material_specification')}", style_body))
+            elements.append(Spacer(1, 3))
+
+            actions = remed_spec.get("prescribed_actions", [])
+            if actions:
+                action_items = "<br/>".join([f"• <b>Step {i+1}:</b> {act}" for i, act in enumerate(actions)])
+                elements.append(Paragraph(f"<b>Prescribed Engineering Actions:</b><br/>{action_items}", style_body))
+                elements.append(Spacer(1, 3))
+
+            equip = remed_spec.get("equipment_required", [])
+            if equip:
+                equip_str = ", ".join(equip)
+                elements.append(Paragraph(f"<b>Required Equipment:</b> {equip_str}", style_callout))
+                elements.append(Spacer(1, 2))
+
+            if remed_spec.get("safety_protocol"):
+                elements.append(Paragraph(f"<b>Safety Protocol & Hazard Controls:</b> {remed_spec.get('safety_protocol')}", style_callout))
+                elements.append(Spacer(1, 2))
+        else:
+            elements.append(Paragraph("<b>STANDARDS COMPLIANCE & REMEDIATION PROTOCOL</b>", style_section))
+            rec_text = survey_data.get("recommendation") or (
+                "Monitor crack development during scheduled inspections. Clean fissure and execute remediation conforming to governing material standards."
+            )
+            elements.append(Paragraph(f"<b>Remediation Protocol:</b> {rec_text}", style_body))
         elements.append(Spacer(1, 4))
 
         disclaimer = survey_data.get("unsupported_claims_disclaimer") or (

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/candidate.json",
+    "sha256": "6cb166274439cadc55a81622b06c1fcb111e6b2cf80fda4d43a0a2488ae70d2e",
+    "bytes": 3095
+  },
+  "artifact": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+    "sha256": "d6f0d29d9cb810495c70ffe76a61a95fb952eb4f0def14e18806c858cd884c00",
+    "bytes": 834449
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.finalize.json",
+    "summaryReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.finalize-summary.json",
+    "browserCheckReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 918,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/candidate.json",
+    "sha256": "6cb166274439cadc55a81622b06c1fcb111e6b2cf80fda4d43a0a2488ae70d2e",
+    "bytes": 3095
+  },
+  "artifact": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+    "sha256": "d6f0d29d9cb810495c70ffe76a61a95fb952eb4f0def14e18806c858cd884c00",
+    "bytes": 834449
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/review-1/web-request-cache-miss.finalize.json",
+    "summaryReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/review-1/web-request-cache-miss.finalize-summary.json",
+    "browserCheckReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/review-1/web-request-cache-miss.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3965,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

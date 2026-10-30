@@ -125,6 +125,7 @@ class CrackAnalyzer:
             "compliance_details": morph_eval["compliance_details"],
             "plain_language_explanation": morph_eval["plain_language_explanation"],
             "multi_factor_metrics": morph_eval["multi_factor_metrics"],
+            "remediation_specification": morph_eval.get("remediation_specification"),
             "unsupported_claims_disclaimer": morph_eval["unsupported_claims_disclaimer"],
             "calibration": {
                 "calibration_status": "uncalibrated_macro",
@@ -154,10 +155,31 @@ class CrackAnalyzer:
         environment: Optional[str] = None,
         standard_code: Optional[str] = "ACI",
         marker_size_mm: Optional[float] = 50.0,
-        manual_scale_mm_per_pixel: Optional[float] = None
+        manual_scale_mm_per_pixel: Optional[float] = None,
+        # Building Profile & Age Context Inputs
+        building_name: Optional[str] = None,
+        building_type: Optional[str] = "residential",
+        construction_year: Optional[int] = None,
+        building_age_years: Optional[float] = None,
+        age_verification: Optional[str] = "unknown",
+        inspection_date: Optional[str] = None,
+        structural_system: Optional[str] = "unknown",
+        structural_material: Optional[str] = "reinforced_concrete",
+        member_importance: Optional[str] = None,
+        repair_history: Optional[str] = None,
+        last_major_inspection_date: Optional[str] = None,
+        last_repair_date: Optional[str] = None,
+        previous_crack_repairs: Optional[str] = "unknown",
+        previous_water_leakage: bool = False,
+        known_reinforcement_corrosion: bool = False,
+        known_spalling_delamination: bool = False,
+        known_settlement: bool = False,
+        damaging_events: Optional[str] = "none",
+        maintenance_condition: Optional[str] = "unknown",
+        environmental_exposure: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Synchronously analyze image for crack defects using YOLOv8, Spatial Calibration, and Multi-Factor Morphometry.
+        Synchronously analyze image for crack defects using YOLOv8, Spatial Calibration, Multi-Factor Morphometry, and Age-Aware Context.
         Offloaded to thread pool by FastAPI caller.
         """
         start_time = time.perf_counter()
@@ -230,10 +252,51 @@ class CrackAnalyzer:
                 elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 1)
 
                 if len(polygons) == 0:
+                    calculated_age = None
+                    is_future = False
+                    insp_year = datetime.now().year
+                    if inspection_date:
+                        try:
+                            insp_year = int(str(inspection_date).split("-")[0])
+                        except Exception:
+                            insp_year = datetime.now().year
+                    if construction_year is not None:
+                        if construction_year > insp_year:
+                            is_future = True
+                            calculated_age = None
+                        else:
+                            calculated_age = float(insp_year - construction_year)
+                    elif building_age_years is not None:
+                        try:
+                            calculated_age = float(building_age_years)
+                        except (ValueError, TypeError):
+                            calculated_age = None
+
+                    built_b_profile = {
+                        "building_name": building_name,
+                        "building_type": building_type or "residential",
+                        "construction_year": construction_year,
+                        "age_years": calculated_age,
+                        "building_age_years": int(calculated_age) if calculated_age is not None else None,
+                        "age_verification": "invalid_future_year" if is_future else (age_verification or "unknown"),
+                        "inspection_date": inspection_date or datetime.now().strftime("%Y-%m-%d"),
+                        "structural_system": structural_system or "unknown",
+                        "structural_material": structural_material or "reinforced_concrete",
+                        "structural_member": member_type or "wall",
+                        "member_importance": member_importance or element_criticality or "primary",
+                        "environmental_exposure": environmental_exposure or "unknown",
+                        "maintenance_condition": maintenance_condition or "unknown"
+                    }
+
                     empty_eval = self.morphometry_service._build_empty_assessment(
                         member_type=member_type,
                         crack_depth_status=crack_depth_status,
-                        standard_code=standard_code
+                        standard_code=standard_code,
+                        building_profile=built_b_profile,
+                        inspection_year=insp_year,
+                        calculated_age=calculated_age,
+                        age_status_verification=built_b_profile["age_verification"],
+                        is_invalid_future_year=is_future
                     )
                     return {
                         "analysis_id": f"ana_{seed}_{int(time.time())}",
@@ -261,7 +324,10 @@ class CrackAnalyzer:
                         "compliance_details": empty_eval["compliance_details"],
                         "plain_language_explanation": empty_eval["plain_language_explanation"],
                         "multi_factor_metrics": empty_eval["multi_factor_metrics"],
+                        "remediation_specification": empty_eval.get("remediation_specification"),
                         "unsupported_claims_disclaimer": empty_eval["unsupported_claims_disclaimer"],
+                        "building_profile": empty_eval.get("building_profile"),
+                        "age_deterioration_context": empty_eval.get("age_deterioration_context"),
                         "calibration": calib_info
                     }
 
@@ -279,7 +345,27 @@ class CrackAnalyzer:
                     previous_width_mm=previous_width_mm,
                     crack_depth_status=crack_depth_status,
                     environment=environment,
-                    standard_code=standard_code
+                    standard_code=standard_code,
+                    building_name=building_name,
+                    building_type=building_type,
+                    construction_year=construction_year,
+                    building_age_years=building_age_years,
+                    age_verification=age_verification,
+                    inspection_date=inspection_date,
+                    structural_system=structural_system,
+                    structural_material=structural_material,
+                    member_importance=member_importance,
+                    repair_history=repair_history,
+                    last_major_inspection_date=last_major_inspection_date,
+                    last_repair_date=last_repair_date,
+                    previous_crack_repairs=previous_crack_repairs,
+                    previous_water_leakage=previous_water_leakage,
+                    known_reinforcement_corrosion=known_reinforcement_corrosion,
+                    known_spalling_delamination=known_spalling_delamination,
+                    known_settlement=known_settlement,
+                    damaging_events=damaging_events,
+                    maintenance_condition=maintenance_condition,
+                    environmental_exposure=environmental_exposure
                 )
 
                 crack_type = self.morphometry_service.classify_orientation(boxes[0])
@@ -311,7 +397,10 @@ class CrackAnalyzer:
                     "compliance_details": morph_metrics["compliance_details"],
                     "plain_language_explanation": morph_metrics["plain_language_explanation"],
                     "multi_factor_metrics": morph_metrics["multi_factor_metrics"],
+                    "remediation_specification": morph_metrics.get("remediation_specification"),
                     "unsupported_claims_disclaimer": morph_metrics["unsupported_claims_disclaimer"],
+                    "building_profile": morph_metrics.get("building_profile"),
+                    "age_deterioration_context": morph_metrics.get("age_deterioration_context"),
                     "calibration": calib_info
                 }
 
@@ -346,7 +435,28 @@ def analyze_crack(
     environment: Optional[str] = None,
     standard_code: Optional[str] = "ACI",
     marker_size_mm: Optional[float] = 50.0,
-    manual_scale_mm_per_pixel: Optional[float] = None
+    manual_scale_mm_per_pixel: Optional[float] = None,
+    # Building Profile & Age Context Inputs
+    building_name: Optional[str] = None,
+    building_type: Optional[str] = "residential",
+    construction_year: Optional[int] = None,
+    building_age_years: Optional[float] = None,
+    age_verification: Optional[str] = "unknown",
+    inspection_date: Optional[str] = None,
+    structural_system: Optional[str] = "unknown",
+    structural_material: Optional[str] = "reinforced_concrete",
+    member_importance: Optional[str] = None,
+    repair_history: Optional[str] = None,
+    last_major_inspection_date: Optional[str] = None,
+    last_repair_date: Optional[str] = None,
+    previous_crack_repairs: Optional[str] = "unknown",
+    previous_water_leakage: bool = False,
+    known_reinforcement_corrosion: bool = False,
+    known_spalling_delamination: bool = False,
+    known_settlement: bool = False,
+    damaging_events: Optional[str] = "none",
+    maintenance_condition: Optional[str] = "unknown",
+    environmental_exposure: Optional[str] = None
 ) -> Dict[str, Any]:
     return analyzer.analyze(
         file_bytes=file_bytes,
@@ -361,5 +471,25 @@ def analyze_crack(
         environment=environment,
         standard_code=standard_code,
         marker_size_mm=marker_size_mm,
-        manual_scale_mm_per_pixel=manual_scale_mm_per_pixel
+        manual_scale_mm_per_pixel=manual_scale_mm_per_pixel,
+        building_name=building_name,
+        building_type=building_type,
+        construction_year=construction_year,
+        building_age_years=building_age_years,
+        age_verification=age_verification,
+        inspection_date=inspection_date,
+        structural_system=structural_system,
+        structural_material=structural_material,
+        member_importance=member_importance,
+        repair_history=repair_history,
+        last_major_inspection_date=last_major_inspection_date,
+        last_repair_date=last_repair_date,
+        previous_crack_repairs=previous_crack_repairs,
+        previous_water_leakage=previous_water_leakage,
+        known_reinforcement_corrosion=known_reinforcement_corrosion,
+        known_spalling_delamination=known_spalling_delamination,
+        known_settlement=known_settlement,
+        damaging_events=damaging_events,
+        maintenance_condition=maintenance_condition,
+        environmental_exposure=environmental_exposure
     )

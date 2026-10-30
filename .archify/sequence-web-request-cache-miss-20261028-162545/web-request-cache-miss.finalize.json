@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "sequence",
+  "quality": "showcase",
+  "startedAt": "2026-10-28T10:56:24.252Z",
+  "specification": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/candidate.json",
+    "sha256": "6cb166274439cadc55a81622b06c1fcb111e6b2cf80fda4d43a0a2488ae70d2e",
+    "bytes": 3095
+  },
+  "artifact": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+    "sha256": "d6f0d29d9cb810495c70ffe76a61a95fb952eb4f0def14e18806c858cd884c00",
+    "bytes": 834449
+  },
+  "stages": {
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "sequence",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/candidate.json",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "6cb166274439cadc55a81622b06c1fcb111e6b2cf80fda4d43a0a2488ae70d2e",
+          "bytes": 3095
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 493,
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "sequence",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/candidate.json",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "af4c4ef5-84bc-45a0-8d4a-63c3844b6f18",
+        "ok": true,
+        "command": "deliver",
+        "type": "sequence",
+        "input": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/candidate.json",
+        "output": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+        "specification": {
+          "sha256": "6cb166274439cadc55a81622b06c1fcb111e6b2cf80fda4d43a0a2488ae70d2e",
+          "bytes": 3095
+        },
+        "artifact": {
+          "sha256": "d6f0d29d9cb810495c70ffe76a61a95fb952eb4f0def14e18806c858cd884c00",
+          "bytes": 834449
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 197,
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "check",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+        "artifact": {
+          "sha256": "d6f0d29d9cb810495c70ffe76a61a95fb952eb4f0def14e18806c858cd884c00",
+          "bytes": 834449
+        },
+        "checks": [
+          {
+            "name": "single_svg",
+            "ok": true,
+            "details": [
+              "found 1 <svg> block(s)"
+            ]
+          },
+          {
+            "name": "finite_svg",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "orthogonal_arrows",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "label_route_clearance",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_crossings",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_corridors",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "container_border_runs",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "route_rhythm",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "legend_clearance",
+            "ok": true,
+            "details": []
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "metrics": {
+            "properCrossings": 0,
+            "resolvedCrossovers": 0,
+            "ambiguousCorridors": 0,
+            "arrowheadCollisions": 0,
+            "containerBorderRuns": 0,
+            "labelRouteClearanceIssues": 0,
+            "labelCanvasOverflowIssues": 0,
+            "minLabelRouteClearance": 15,
+            "desktopReadabilityIssues": 0,
+            "viewportHeightIssues": 0,
+            "minProjectedNodeTextPx": 7,
+            "maxBends": 0,
+            "routesOverSuggestedBends": 0,
+            "maxStretch": 1,
+            "routesOverSuggestedStretch": 0,
+            "minSegmentPx": 200.3,
+            "minInteriorSegmentPx": null,
+            "shortSegmentCount": 0,
+            "shortEndpointSegmentCount": 0,
+            "shortInteriorSegmentCount": 0,
+            "microSegmentCount": 0
+          },
+          "suggestedLimits": {
+            "bendsPerRelationship": 2,
+            "stretch": 1.35,
+            "segmentPx": 16,
+            "microSegmentPx": 8
+          },
+          "routeReview": {
+            "crossings": [],
+            "detours": []
+          },
+          "leadingSpace": {
+            "measured": false,
+            "reviewSuggested": false
+          },
+          "sequenceColumnSpace": {
+            "measured": true,
+            "columnFit": "spread",
+            "participantCount": 4,
+            "occupiedRight": 880,
+            "viewBoxLeft": 0,
+            "canvasWidth": 920,
+            "emptyRightPx": 40,
+            "emptyRightRatio": 0.043,
+            "typicalParticipantWidth": 175,
+            "reviewSuggested": false
+          },
+          "desktopReadability": {
+            "budgetBasis": "legacy-930",
+            "readerContract": "declared-wide-v1",
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "limit": "legacy",
+            "requestedTargetPx": null,
+            "requestedTargetMet": null,
+            "hardFloorPx": 6,
+            "hardFloorMet": true,
+            "minimumOwner": {
+              "kind": "node",
+              "id": "browser"
+            },
+            "minimumSourceTextPx": 7,
+            "minimumProjectedTextPx": 7,
+            "semanticTextCount": 16
+          },
+          "issues": []
+        },
+        "provenance": "current",
+        "deliveryReceiptId": "af4c4ef5-84bc-45a0-8d4a-63c3844b6f18"
+      }
+    },
+    "browser-check": {
+      "status": "skipped",
+      "exitCode": 2,
+      "durationMs": 30,
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "browser-check",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+        "--json",
+        "--require-provenance"
+      ],
+      "execution": "in-process",
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "browser-check",
+        "evidenceKind": "automated-browser",
+        "status": "skipped",
+        "visualReview": "not-requested",
+        "provenance": "current",
+        "deliveryReceiptId": "af4c4ef5-84bc-45a0-8d4a-63c3844b6f18",
+        "artifact": {
+          "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+          "sha256": "d6f0d29d9cb810495c70ffe76a61a95fb952eb4f0def14e18806c858cd884c00",
+          "bytes": 834449
+        },
+        "state": {
+          "detail": "read",
+          "motion": "still"
+        },
+        "chrome": {
+          "status": "unavailable",
+          "executable": null
+        },
+        "diagnostics": [
+          {
+            "code": "viewer/chrome-unavailable",
+            "severity": "warning",
+            "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+            "subject": {
+              "artifact": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html"
+            },
+            "evidence": {
+              "executable": null
+            },
+            "supportedFixes": [
+              "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+            ]
+          }
+        ],
+        "containment": {
+          "status": "skipped",
+          "policy": "fit-or-reader-declared-readable-vertical-scroll",
+          "viewports": []
+        },
+        "themeStates": {
+          "status": "skipped",
+          "viewports": []
+        },
+        "readability": {
+          "status": "skipped",
+          "minimumProjectedNodeTextPx": 6,
+          "viewports": []
+        },
+        "viewerChrome": {
+          "status": "skipped",
+          "viewports": []
+        },
+        "captures": {
+          "status": "not-requested",
+          "screenshots": [],
+          "contactSheet": null
+        },
+        "sidecars": {
+          "receipt": "web-request-cache-miss.browser-check.json",
+          "files": []
+        },
+        "error": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path."
+      }
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.finalize.json",
+    "summaryReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.finalize-summary.json",
+    "browserCheckReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "browser-check",
+  "finishedAt": "2026-10-28T10:56:25.170Z",
+  "durationMs": 918,
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "check-failed"
+  }
+}

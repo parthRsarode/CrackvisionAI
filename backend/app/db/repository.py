@@ -26,11 +26,30 @@ class SurveyRepository:
         return [a.to_dict() for a in assets]
 
     @staticmethod
-    def create_asset(db: Session, asset_tag: str, name: str, component_type: str = "Structural Element", location: str = "Field Site") -> Dict[str, Any]:
+    def create_asset(
+        db: Session,
+        asset_tag: str,
+        name: str,
+        component_type: str = "Structural Element",
+        location: str = "Field Site",
+        building_type: str = "residential",
+        construction_year: Optional[int] = None,
+        structural_system: str = "unknown",
+        structural_material: str = "reinforced_concrete"
+    ) -> Dict[str, Any]:
         existing = db.query(Asset).filter(Asset.asset_tag == asset_tag).first()
         if existing:
             return existing.to_dict()
-        asset = Asset(asset_tag=asset_tag, name=name, component_type=component_type, location=location)
+        asset = Asset(
+            asset_tag=asset_tag,
+            name=name,
+            component_type=component_type,
+            location=location,
+            building_type=building_type,
+            construction_year=construction_year,
+            structural_system=structural_system,
+            structural_material=structural_material
+        )
         db.add(asset)
         db.commit()
         db.refresh(asset)
@@ -96,6 +115,8 @@ class SurveyRepository:
         survey.compliance_details_json = json.dumps(data.get("compliance_details") or {})
         survey.evidence_sufficiency_json = json.dumps(data.get("evidence_sufficiency") or {})
         survey.plain_language_explanation = str(data.get("plain_language_explanation", ""))
+        survey.building_profile_json = json.dumps(data.get("building_profile") or {})
+        survey.age_deterioration_context_json = json.dumps(data.get("age_deterioration_context") or {})
 
         db.commit()
         db.refresh(survey)
@@ -124,6 +145,8 @@ class SurveyRepository:
         if not survey:
             return None
         return survey.to_dict()
+
+    get_survey_by_id = get_survey
 
     @staticmethod
     def delete_survey(db: Session, survey_id: str) -> bool:

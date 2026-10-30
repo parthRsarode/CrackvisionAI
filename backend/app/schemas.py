@@ -40,6 +40,80 @@ class ProbeApertureResponse(BaseModel):
     width_mm: float
     span_points: List[List[float]]
 
+class BuildingProfile(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    building_name: Optional[str] = Field(default=None, description="Building or asset identification name/ID")
+    building_type: str = Field(default="residential", description="residential | commercial | industrial | institutional | parking_structure | bridge | other")
+    construction_year: Optional[int] = Field(default=None, description="Year of original construction (None if unknown)")
+    age_years: Optional[float] = Field(default=None, description="Calculated or estimated age in years at time of inspection")
+    building_age_years: Optional[float] = Field(default=None, description="Calculated or estimated age in years at time of inspection")
+    age_verification: str = Field(default="unknown", description="documented | owner_reported | estimated | unknown")
+    inspection_date: Optional[str] = Field(default=None, description="ISO inspection date (YYYY-MM-DD) for historical age context")
+    
+    # Structural Information
+    structural_system: Optional[str] = Field(default="unknown", description="e.g. RC Frame, Shear Wall, Post-Tensioned, Masonry, etc.")
+    structural_material: str = Field(default="reinforced_concrete", description="reinforced_concrete | prestressed_concrete | masonry | steel | mixed_system | unknown")
+    structural_member: str = Field(default="wall", description="beam | column | slab | wall | foundation | bridge_deck | pavement | other")
+    member_importance: str = Field(default="primary", description="primary | secondary | non_structural | unknown")
+    repair_history: Optional[str] = Field(default=None, description="Known construction or repair history summary")
+
+    # Maintenance & Deterioration History
+    last_major_inspection_date: Optional[str] = Field(default=None, description="Last recorded formal inspection date")
+    last_repair_date: Optional[str] = Field(default=None, description="Last recorded rehabilitation or repair date")
+    previous_crack_repairs: str = Field(default="unknown", description="yes | no | unknown")
+    previous_water_leakage: bool = Field(default=False, description="Persistent dampness or previous water ingress")
+    known_reinforcement_corrosion: bool = Field(default=False, description="Prior recorded corrosion or rebar staining")
+    known_spalling_delamination: bool = Field(default=False, description="Prior recorded spalling, hollow sound, or delamination")
+    known_settlement: bool = Field(default=False, description="Prior recorded foundation settlement or differential movement")
+    damaging_events: str = Field(default="none", description="none | earthquake | fire | impact | flooding | other")
+    maintenance_condition: str = Field(default="unknown", description="regular | occasional | poor | unknown")
+
+    # Environmental Exposure
+    environmental_exposure: str = Field(default="unknown", description="indoor_dry | outdoor_weather | persistent_moisture | coastal_marine | industrial_chemical | soil_groundwater | freeze_thaw | unknown")
+
+class AgeDeteriorationContext(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    status: str = Field(
+        default="context_documented",
+        description="context_documented | potential_age_related_distress | further_deterioration_assessment_recommended | early_age_construction_defect_suspected | insufficient_historical_information | no_age_specific_conclusion_supported"
+    )
+    status_label: str = Field(default="Context Documented", description="Human-readable status label")
+    construction_year: Optional[int] = Field(default=None)
+    inspection_year: Optional[int] = Field(default=None)
+    age_at_inspection_years: Optional[float] = Field(default=None)
+    age_at_inspection: Optional[float] = Field(default=None)
+    age_verification: str = Field(default="unknown")
+    environmental_exposure: str = Field(default="unknown")
+    maintenance_condition: str = Field(default="unknown")
+    observed_deterioration_indicators: List[str] = Field(default_factory=list)
+    historical_progression: Optional[str] = Field(default="Baseline survey")
+    missing_historical_information: List[str] = Field(default_factory=list)
+    missing_information: List[str] = Field(default_factory=list)
+    age_influence_summary: str = Field(default="")
+    engineering_rationale: str = Field(default="")
+    engineering_reasoning: str = Field(default="")
+    standards_consulted: List[Dict[str, str]] = Field(default_factory=list)
+    disclaimer: str = Field(
+        default="Building age is contextual information and is not, by itself, a measure of structural safety or crack severity."
+    )
+    context_disclaimer: str = Field(
+        default="Building age is contextual information and is not, by itself, a measure of structural safety or crack severity."
+    )
+
+class RemediationSpecification(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    protocol_title: str = Field(..., description="Actionable title of standard remediation protocol")
+    governing_standard: str = Field(..., description="e.g. ASTM D6690 / AASHTO M 324 or ASTM C881 or TMS 402/602")
+    structural_material: str = Field(default="reinforced_concrete", description="Material category targeted by remediation")
+    material_specification: str = Field(..., description="Detailed material formulation and compliance grade")
+    prescribed_actions: List[str] = Field(default_factory=list, description="Step-by-step engineering procedure steps")
+    equipment_required: List[str] = Field(default_factory=list, description="Specialized application and safety tooling")
+    safety_protocol: str = Field(default="", description="Material and location specific safety requirements")
+    preventive_maintenance: str = Field(default="", description="Post-remediation monitoring and maintenance guidance")
+
 class AnalysisResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -103,11 +177,20 @@ class AnalysisResponse(BaseModel):
         description="Engineering safety disclaimer preventing absolute claims of structural safety."
     )
 
+    # Building Age & Deterioration Context
+    building_profile: Optional[BuildingProfile] = Field(default=None, description="Building identification, age, and historical profile")
+    age_deterioration_context: Optional[AgeDeteriorationContext] = Field(default=None, description="Age-aware deterioration and engineering synthesis")
+    remediation_specification: Optional[RemediationSpecification] = Field(default=None, description="Material and location specific remediation protocol and specification")
+
 class AssetCreate(BaseModel):
     asset_tag: str = Field(..., description="Unique tag e.g. BR-104-N")
     name: str = Field(..., description="Descriptive asset name")
     component_type: str = Field(default="Structural Concrete", description="Element type")
     location: str = Field(default="Field Site", description="Physical location")
+    building_type: Optional[str] = Field(default="residential")
+    construction_year: Optional[int] = Field(default=None)
+    structural_system: Optional[str] = Field(default="unknown")
+    structural_material: Optional[str] = Field(default="reinforced_concrete")
 
 class AssetResponse(BaseModel):
     id: int
@@ -146,6 +229,8 @@ class SurveySaveRequest(BaseModel):
     compliance_details: Optional[Dict[str, Any]] = Field(default_factory=dict)
     evidence_sufficiency: Optional[Dict[str, Any]] = Field(default_factory=dict)
     plain_language_explanation: Optional[str] = ""
+    building_profile: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    age_deterioration_context: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 class BatchAnalysisSummary(BaseModel):
     total_images: int

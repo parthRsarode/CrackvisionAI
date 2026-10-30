@@ -52,6 +52,11 @@ const BatchAnalysisView: React.FC<BatchAnalysisViewProps> = ({
     if (results.length === 0) return;
     const headers = [
       'Survey_ID', 
+      'Building_Name',
+      'Building_Type',
+      'Construction_Year',
+      'Age_At_Inspection',
+      'Age_Verification',
       'Distress_Type', 
       'Severity', 
       'Estimated_Width', 
@@ -61,17 +66,25 @@ const BatchAnalysisView: React.FC<BatchAnalysisViewProps> = ({
       'Standard_Code',
       'Timestamp'
     ];
-    const rows = results.map((item) => [
-      item.analysis_id,
-      `"${item.crack_type}"`,
-      item.severity,
-      `"${item.estimated_width}"`,
-      `"${item.affected_area}"`,
-      item.defect_count ?? 1,
-      item.confidence.toFixed(1),
-      item.compliance_details?.standard_code || 'ACI',
-      item.created_at,
-    ]);
+    const rows = results.map((item) => {
+      const bp = item.building_profile;
+      return [
+        item.analysis_id,
+        `"${bp?.building_name || ''}"`,
+        `"${bp?.building_type || 'unspecified'}"`,
+        bp?.construction_year ?? '',
+        bp?.building_age_years ?? '',
+        `"${bp?.age_verification || 'unknown'}"`,
+        `"${item.crack_type}"`,
+        item.severity,
+        `"${item.estimated_width}"`,
+        `"${item.affected_area}"`,
+        item.defect_count ?? 1,
+        item.confidence.toFixed(1),
+        item.compliance_details?.standard_code || 'ACI',
+        item.created_at,
+      ];
+    });
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

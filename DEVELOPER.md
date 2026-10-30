@@ -70,8 +70,9 @@ crackvision-ai/
 │   │   │   └── crack_yolov8s_seg.pt # Trained YOLOv8 segmentation weights
 │   │   └── utils/              # Utility helpers
 │   ├── scripts/                # Standalone training and dataset conversion scripts
-│   └── tests/                  # Automated pytest test suites
+│   └── tests/                  # Automated pytest test suites (36 tests)
 │       ├── test_api.py         # Health, upload validation, and core analysis tests
+│       ├── test_building_age_assessment.py # 15-scenario Building Age & Context Assessment tests
 │       ├── test_calibration.py # ArUco fiducials, 2-point scale, and caliper tests
 │       ├── test_morphometry.py # Aspect ratio, orientation, and ACI limit tests
 │       ├── test_phase5.py      # Relational DB CRUD, PDF streaming, and batch tests

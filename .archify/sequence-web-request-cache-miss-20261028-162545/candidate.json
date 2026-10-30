@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Web Request Lifecycle: Cache-Aside Miss & Fill",
+    "output": ".archify/sequence-web-request-cache-miss-20261028-162545/web-request-cache-miss.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "browser", "type": "frontend", "label": "Browser", "sublabel": "Client Application" },
+    { "id": "api", "type": "backend", "label": "API Server", "sublabel": "Express / FastAPI" },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "In-Memory Cache" },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL", "sublabel": "Primary Database" }
+  ],
+  "segments": [
+    { "from": 145, "to": 245, "label": "Request & Cache Check" },
+    { "from": 250, "to": 315, "label": "Database Fallback (Miss)" },
+    { "from": 320, "to": 420, "label": "Cache Fill & Client Response" }
+  ],
+  "messages": [
+    { "id": "client-request", "from": "browser", "to": "api", "y": 160, "label": "GET /api/resource", "variant": "emphasis" },
+    { "id": "redis-get", "from": "api", "to": "redis", "y": 195, "label": "GET cache:key", "variant": "default" },
+    { "id": "redis-miss", "from": "redis", "to": "api", "y": 230, "label": "(nil) Cache Miss", "variant": "return" },
+    { "id": "pg-query", "from": "api", "to": "postgres", "y": 265, "label": "SELECT * FROM resources WHERE id = ?", "variant": "emphasis" },
+    { "id": "pg-result", "from": "postgres", "to": "api", "y": 300, "label": "Row data (Record)", "variant": "return" },
+    { "id": "redis-set", "from": "api", "to": "redis", "y": 335, "label": "SET cache:key <data> EX 3600", "variant": "dashed" },
+    { "id": "redis-ack", "from": "redis", "to": "api", "y": 370, "label": "OK", "variant": "return" },
+    { "id": "client-response", "from": "api", "to": "browser", "y": 405, "label": "200 OK (JSON response)", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "browser", "from": 155, "to": 410, "type": "frontend" },
+    { "participant": "api", "from": 160, "to": 405, "type": "backend" },
+    { "participant": "redis", "from": 190, "to": 235, "type": "database" },
+    { "participant": "postgres", "from": 260, "to": 305, "type": "database" },
+    { "participant": "redis", "from": 330, "to": 375, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Client Request",
+      "items": [
+        "Browser initiates an HTTP GET request to the API server",
+        "API acts as the orchestrator across caching and database tiers"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cache Miss & Fallback",
+      "items": [
+        "API inspects Redis key first for optimal sub-millisecond retrieval",
+        "On cache miss ((nil)), API immediately falls back to PostgreSQL as source of truth"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Cache Fill & Return",
+      "items": [
+        "Retrieved database row is stored asynchronously in Redis with a TTL",
+        "API returns the payload in a 200 OK JSON response to the client"
+      ]
+    }
+  ]
+}

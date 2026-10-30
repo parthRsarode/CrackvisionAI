@@ -145,24 +145,39 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
     if (history.length === 0) return;
     const headers = [
       'Report_ID', 
+      'Building_Name',
+      'Building_Type',
+      'Construction_Year',
+      'Age_At_Inspection',
+      'Age_Verification',
       'Distress_Type', 
       'Severity', 
       'Aperture_Width', 
       'Surface_Area', 
       'Confidence_Pct', 
       'Standard_Code',
+      'Environmental_Exposure',
       'Timestamp'
     ];
-    const rows = history.map((item) => [
-      item.analysis_id,
-      `"${item.crack_type}"`,
-      item.severity,
-      `"${item.estimated_width}"`,
-      `"${item.affected_area}"`,
-      item.confidence.toFixed(1),
-      item.compliance_details?.standard_code || 'ACI',
-      item.created_at,
-    ]);
+    const rows = history.map((item) => {
+      const bp = item.building_profile;
+      return [
+        item.analysis_id,
+        `"${bp?.building_name || ''}"`,
+        `"${bp?.building_type || 'unspecified'}"`,
+        bp?.construction_year ?? '',
+        bp?.building_age_years ?? '',
+        `"${bp?.age_verification || 'unknown'}"`,
+        `"${item.crack_type}"`,
+        item.severity,
+        `"${item.estimated_width}"`,
+        `"${item.affected_area}"`,
+        item.confidence.toFixed(1),
+        item.compliance_details?.standard_code || 'ACI',
+        `"${bp?.environmental_exposure || 'indoor_dry'}"`,
+        item.created_at,
+      ];
+    });
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -341,6 +356,14 @@ const AnalysisHistory: React.FC<AnalysisHistoryProps> = ({ onHistoryItemClick })
 
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-mono text-slate-600">
                       <span>ID: <strong className="text-slate-800">{item.analysis_id}</strong></span>
+                      {item.building_profile?.building_name && (
+                        <span>Asset: <strong className="text-slate-900">{item.building_profile.building_name}</strong></span>
+                      )}
+                      {item.building_profile?.building_age_years !== undefined && item.building_profile?.building_age_years !== null && (
+                        <span className="text-cyan-800 font-bold bg-cyan-50 px-1 rounded border border-cyan-200">
+                          {item.building_profile.building_age_years} yrs old
+                        </span>
+                      )}
                       <span>Width: <strong className="text-slate-900">{item.estimated_width}</strong></span>
                       <span>Area: <strong className="text-slate-900">{item.affected_area}</strong></span>
                       <span>{new Date(item.created_at).toLocaleDateString()}</span>

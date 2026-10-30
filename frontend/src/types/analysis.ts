@@ -74,9 +74,64 @@ export interface AnalysisResult {
   multi_factor_metrics?: MultiFactorMetrics;
   unsupported_claims_disclaimer?: string;
 
+  // Building & Asset Profile and Age-Aware Context
+  building_profile?: BuildingProfile;
+  age_deterioration_context?: AgeDeteriorationContext;
+  remediation_specification?: RemediationSpecification;
+
   // Phase 04 Spatial Calibration & Caliper Fields
   calibration?: CalibrationInfo;
   caliper_samples?: CaliperSample[];
+}
+
+export interface RemediationSpecification {
+  protocol_title: string;
+  governing_standard: string;
+  structural_material: string;
+  material_specification: string;
+  prescribed_actions: string[];
+  equipment_required: string[];
+  safety_protocol?: string;
+  preventive_maintenance?: string;
+  summary_recommendation?: string;
+}
+
+export interface BuildingProfile {
+  building_name?: string | null;
+  building_type?: string;
+  construction_year?: number | null;
+  building_age_years?: number | null;
+  age_verification?: 'documented' | 'owner_reported' | 'estimated' | 'unknown' | string;
+  inspection_date?: string | null;
+  structural_system?: string | null;
+  structural_material?: string;
+  structural_member?: string | null;
+  member_importance?: string;
+  maintenance_condition?: string;
+  environmental_exposure?: string;
+  previous_repairs?: string;
+  water_leakage?: boolean;
+  known_reinforcement_corrosion?: boolean;
+  known_spalling?: boolean;
+  known_settlement?: boolean;
+  damaging_event?: boolean;
+  damaging_event_details?: string | null;
+  repair_history_notes?: string | null;
+}
+
+export interface AgeDeteriorationContext {
+  status: 'context_documented' | 'potential_age_related_distress' | 'further_deterioration_assessment_recommended' | 'early_age_construction_defect_suspected' | 'insufficient_historical_information' | 'no_age_specific_conclusion_supported' | string;
+  construction_year?: number | null;
+  age_at_inspection?: number | null;
+  age_verification: string;
+  inspection_date?: string | null;
+  environmental_exposure: string;
+  maintenance_condition: string;
+  observed_deterioration_indicators: string[];
+  historical_progression: string;
+  missing_information: string[];
+  engineering_reasoning: string;
+  context_disclaimer: string;
 }
 
 export interface CalibrationInfo {

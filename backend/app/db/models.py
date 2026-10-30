@@ -22,6 +22,10 @@ class Asset(Base):
     name = Column(String(255), nullable=False)
     component_type = Column(String(128), default="Concrete Structural Element")
     location = Column(String(255), default="Field Site")
+    building_type = Column(String(64), default="residential")
+    construction_year = Column(Integer, nullable=True)
+    structural_system = Column(String(128), default="unknown")
+    structural_material = Column(String(128), default="reinforced_concrete")
     created_at = Column(DateTime, default=datetime.utcnow)
 
     surveys = relationship("Survey", back_populates="asset", cascade="all, delete-orphan")
@@ -33,6 +37,10 @@ class Asset(Base):
             "name": self.name,
             "component_type": self.component_type,
             "location": self.location,
+            "building_type": self.building_type,
+            "construction_year": self.construction_year,
+            "structural_system": self.structural_system,
+            "structural_material": self.structural_material,
             "survey_count": len(self.surveys) if self.surveys else 0,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
@@ -71,6 +79,8 @@ class Survey(Base):
     compliance_details_json = Column(Text, default="{}")
     evidence_sufficiency_json = Column(Text, default="{}")
     plain_language_explanation = Column(Text, default="")
+    building_profile_json = Column(Text, default="{}")
+    age_deterioration_context_json = Column(Text, default="{}")
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -108,6 +118,8 @@ class Survey(Base):
             "compliance_details": json.loads(self.compliance_details_json or "{}"),
             "evidence_sufficiency": json.loads(self.evidence_sufficiency_json or "{}"),
             "plain_language_explanation": self.plain_language_explanation,
+            "building_profile": json.loads(self.building_profile_json or "{}"),
+            "age_deterioration_context": json.loads(self.age_deterioration_context_json or "{}"),
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
