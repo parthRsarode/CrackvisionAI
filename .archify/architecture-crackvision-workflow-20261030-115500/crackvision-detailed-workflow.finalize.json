@@ -1,0 +1,375 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-30T06:26:41.950Z",
+  "specification": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/candidate.json",
+    "sha256": "36fa0b4218afc8c9f710544df904840c216e74e03937d6dada171de1b1562643",
+    "bytes": 5810
+  },
+  "artifact": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+    "sha256": "269bb3d9d600a4c0eaaa21db67be81c07dc9092e5c8f4eae58489c8b331ef1aa",
+    "bytes": 857563
+  },
+  "stages": {
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/candidate.json",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "36fa0b4218afc8c9f710544df904840c216e74e03937d6dada171de1b1562643",
+          "bytes": 5810
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 417,
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/candidate.json",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "e1851c0c-722b-45f0-810d-f34e13cf126d",
+        "ok": true,
+        "command": "deliver",
+        "type": "architecture",
+        "input": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/candidate.json",
+        "output": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+        "specification": {
+          "sha256": "36fa0b4218afc8c9f710544df904840c216e74e03937d6dada171de1b1562643",
+          "bytes": 5810
+        },
+        "artifact": {
+          "sha256": "269bb3d9d600a4c0eaaa21db67be81c07dc9092e5c8f4eae58489c8b331ef1aa",
+          "bytes": 857563
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 188,
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "check",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+        "artifact": {
+          "sha256": "269bb3d9d600a4c0eaaa21db67be81c07dc9092e5c8f4eae58489c8b331ef1aa",
+          "bytes": 857563
+        },
+        "checks": [
+          {
+            "name": "single_svg",
+            "ok": true,
+            "details": [
+              "found 1 <svg> block(s)"
+            ]
+          },
+          {
+            "name": "finite_svg",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "orthogonal_arrows",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "label_route_clearance",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_crossings",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_corridors",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "container_border_runs",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "route_rhythm",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "legend_clearance",
+            "ok": true,
+            "details": []
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "metrics": {
+            "properCrossings": 0,
+            "resolvedCrossovers": 0,
+            "ambiguousCorridors": 0,
+            "arrowheadCollisions": 0,
+            "containerBorderRuns": 0,
+            "labelRouteClearanceIssues": 0,
+            "labelCanvasOverflowIssues": 0,
+            "minLabelRouteClearance": 22.8,
+            "desktopReadabilityIssues": 0,
+            "viewportHeightIssues": 0,
+            "minProjectedNodeTextPx": 7.3251700680272105,
+            "maxBends": 1,
+            "routesOverSuggestedBends": 0,
+            "maxStretch": 1,
+            "routesOverSuggestedStretch": 0,
+            "minSegmentPx": 40,
+            "minInteriorSegmentPx": null,
+            "shortSegmentCount": 0,
+            "shortEndpointSegmentCount": 0,
+            "shortInteriorSegmentCount": 0,
+            "microSegmentCount": 0
+          },
+          "suggestedLimits": {
+            "bendsPerRelationship": 2,
+            "stretch": 1.35,
+            "segmentPx": 16,
+            "microSegmentPx": 8
+          },
+          "routeReview": {
+            "crossings": [],
+            "detours": []
+          },
+          "leadingSpace": {
+            "measured": true,
+            "emptyTopPx": 110,
+            "emptyTopRatio": 0.208,
+            "occupiedTop": 110,
+            "viewBoxTop": 0,
+            "canvasHeight": 528,
+            "typicalNodeHeight": 60,
+            "reviewSuggested": false
+          },
+          "desktopReadability": {
+            "budgetBasis": "recognized-declared-wide",
+            "readerContract": "declared-wide-v1",
+            "availableDiagramWidth": 1346,
+            "actualBudgetPx": 1346,
+            "actualReaderWidth": 1376,
+            "desiredReaderWidth": 1408.125,
+            "viewportCap": 1376,
+            "limit": "viewport-cap",
+            "requestedTargetPx": 7.5,
+            "requestedTargetMet": false,
+            "hardFloorPx": 6,
+            "hardFloorMet": true,
+            "minimumOwner": {
+              "kind": "edge",
+              "id": "c1",
+              "from": "inspector",
+              "to": "ui_uploader"
+            },
+            "minimumSourceTextPx": 8,
+            "minimumProjectedTextPx": 7.3251700680272105,
+            "semanticTextCount": 38
+          },
+          "issues": []
+        },
+        "provenance": "current",
+        "deliveryReceiptId": "e1851c0c-722b-45f0-810d-f34e13cf126d"
+      }
+    },
+    "browser-check": {
+      "status": "skipped",
+      "exitCode": 2,
+      "durationMs": 23,
+      "command": [
+        "/opt/homebrew/Cellar/node/26.8.1/bin/node",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.agents/skills/archify/bin/archify.mjs",
+        "browser-check",
+        "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+        "--json",
+        "--require-provenance"
+      ],
+      "execution": "in-process",
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "browser-check",
+        "evidenceKind": "automated-browser",
+        "status": "skipped",
+        "visualReview": "not-requested",
+        "provenance": "current",
+        "deliveryReceiptId": "e1851c0c-722b-45f0-810d-f34e13cf126d",
+        "artifact": {
+          "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+          "sha256": "269bb3d9d600a4c0eaaa21db67be81c07dc9092e5c8f4eae58489c8b331ef1aa",
+          "bytes": 857563
+        },
+        "state": {
+          "detail": "read",
+          "motion": "still"
+        },
+        "chrome": {
+          "status": "unavailable",
+          "executable": null
+        },
+        "diagnostics": [
+          {
+            "code": "viewer/chrome-unavailable",
+            "severity": "warning",
+            "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+            "subject": {
+              "artifact": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html"
+            },
+            "evidence": {
+              "executable": null
+            },
+            "supportedFixes": [
+              "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+            ]
+          }
+        ],
+        "containment": {
+          "status": "skipped",
+          "policy": "fit-or-reader-declared-readable-vertical-scroll",
+          "viewports": []
+        },
+        "themeStates": {
+          "status": "skipped",
+          "viewports": []
+        },
+        "readability": {
+          "status": "skipped",
+          "minimumProjectedNodeTextPx": 6,
+          "viewports": []
+        },
+        "viewerChrome": {
+          "status": "skipped",
+          "viewports": []
+        },
+        "captures": {
+          "status": "not-requested",
+          "screenshots": [],
+          "contactSheet": null
+        },
+        "sidecars": {
+          "receipt": "crackvision-detailed-workflow.browser-check.json",
+          "files": []
+        },
+        "error": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path."
+      }
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.finalize.json",
+    "summaryReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.finalize-summary.json",
+    "browserCheckReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "browser-check",
+  "finishedAt": "2026-10-30T06:26:42.758Z",
+  "durationMs": 807,
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "cache-valid"
+  }
+}

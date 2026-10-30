@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/candidate.json",
+    "sha256": "36fa0b4218afc8c9f710544df904840c216e74e03937d6dada171de1b1562643",
+    "bytes": 5810
+  },
+  "artifact": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+    "sha256": "269bb3d9d600a4c0eaaa21db67be81c07dc9092e5c8f4eae58489c8b331ef1aa",
+    "bytes": 857563
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.finalize.json",
+    "summaryReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.finalize-summary.json",
+    "browserCheckReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 807,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}

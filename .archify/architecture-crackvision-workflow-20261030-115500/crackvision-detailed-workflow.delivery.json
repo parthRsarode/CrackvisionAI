@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "07efc6f8-2015-4ee1-a8ac-7c11925293d4",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/candidate.json",
+  "output": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+  "specification": {
+    "sha256": "36fa0b4218afc8c9f710544df904840c216e74e03937d6dada171de1b1562643",
+    "bytes": 5810
+  },
+  "artifact": {
+    "sha256": "269bb3d9d600a4c0eaaa21db67be81c07dc9092e5c8f4eae58489c8b331ef1aa",
+    "bytes": 857563
+  }
+}

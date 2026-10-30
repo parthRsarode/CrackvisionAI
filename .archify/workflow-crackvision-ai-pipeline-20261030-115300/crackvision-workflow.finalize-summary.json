@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/candidate.json",
+    "sha256": "047cad5137f1231a8f341fd945fb66b2f941aca5a76fc48a7d9b17ecbc431d91",
+    "bytes": 7809
+  },
+  "artifact": {
+    "path": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/crackvision-workflow.html"
+  },
+  "gates": {
+    "validate": "fail",
+    "deliver": "not-run",
+    "check": "not-run",
+    "browser-check": "not-run"
+  },
+  "failedStage": "validate",
+  "diagnostics": [
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Label \"Asset & Building Profile\" (~163px) is wider than component \"asset_metadata\" (140px) — shorten the label or increase node.width.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    },
+    {
+      "code": "composition/proper-crossing",
+      "severity": "error",
+      "message": "[composition/proper-crossing] showcase workflow edges[1] id \"e_meta_yolo\" \"asset_metadata\" -> \"yolo_segmentation\" crosses edges[4] id \"e_calib_morph\" \"scale_calibration\" -> \"morphometry_analysis\" at [500.8, 303] (segments 3 and 0) — adjust route/via, bias, or channel coordinates so the edges use separate lane corridors.",
+      "subject": {
+        "diagramType": "workflow",
+        "collection": "edges",
+        "index": 1,
+        "id": "e_meta_yolo",
+        "from": "asset_metadata",
+        "to": "yolo_segmentation"
+      },
+      "evidence": {
+        "otherRelationship": {
+          "diagramType": "workflow",
+          "collection": "edges",
+          "index": 4,
+          "id": "e_calib_morph",
+          "from": "scale_calibration",
+          "to": "morphometry_analysis"
+        },
+        "point": [
+          500.7999999999998,
+          303
+        ],
+        "segmentIndex": 3,
+        "otherSegmentIndex": 0
+      },
+      "supportedFixes": [
+        "adjust route/via, bias, or channel coordinates so the edges use separate lane corridors"
+      ]
+    },
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Label \"Spatial Scale Calibration\" (~170px) is wider than component \"scale_calibration\" (140px) — shorten the label or increase node.width.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    },
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Label \"Interactive CAD Calipers\" (~163px) is wider than component \"caliper_tool\" (140px) — shorten the label or increase node.width.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    },
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Label \"Age & Deterioration Context\" (~184px) is wider than component \"age_deterioration_context\" (140px) — shorten the label or increase node.width.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    },
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Sublabel \"ACI 224R, Eurocode 2, IS 456, BS 8110\" needs ~134px at the 6px legible minimum, but node \"code_compliance\" provides 132px — shorten the sublabel or increase node.width.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    },
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Sublabel \"Roads: AASHTO | Masonry: TMS | RC: ASTM\" needs ~141px at the 6px legible minimum, but node \"remediation_specification\" provides 132px — shorten the sublabel or increase node.width.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    },
+    {
+      "code": "layout/constraint",
+      "severity": "error",
+      "message": "Phase \"phase_cv\" (1..2) overlaps phase \"phase_intake\" (0..1) — start at col 2 or later, or end the earlier phase at col 0.",
+      "subject": {
+        "diagramType": "workflow"
+      }
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 11,
+    "shown": 8,
+    "truncated": true,
+    "omittedByCode": {
+      "layout/constraint": 2,
+      "composition/proper-crossing": 1
+    }
+  },
+  "evidence": {
+    "receipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/crackvision-workflow.finalize.json",
+    "summaryReceipt": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/crackvision-workflow.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 467,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "nextAction": {
+    "action": "edit-in-place",
+    "candidate": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/candidate.json",
+    "constraint": "Preserve unaffected semantics and geometry; apply each diagnostic's supportedFixes, or the fix its message names, and do not replace the whole candidate.",
+    "then": "finalize-once"
+  }
+}

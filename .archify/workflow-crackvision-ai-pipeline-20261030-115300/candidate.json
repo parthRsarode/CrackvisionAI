@@ -1,0 +1,262 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "CrackVision AI — End-to-End Civil & Computer Vision Pipeline",
+    "subtitle": "From Visual Intake & Scale Calibration to Multi-Factor Deterioration Synthesis & Tailored Remediation Protocol",
+    "animation": "trace",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-crackvision-ai-pipeline-20261030-115300/crackvision-workflow.html"
+  },
+  "lanes": [
+    { "id": "ui", "label": "Client Interface (React / Vite)" },
+    { "id": "vision", "label": "Computer Vision & Calibration" },
+    { "id": "morph", "label": "Civil Engineering Morphometry" },
+    { "id": "standards", "label": "Standards & Remediation Engine" },
+    { "id": "storage", "label": "Persistence & SCAR Reporting" }
+  ],
+  "phases": [
+    { "id": "phase_intake", "label": "1. Field Intake", "fromCol": 0, "toCol": 1 },
+    { "id": "phase_cv", "label": "2. Vision & Calibration", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "phase_synthesis", "label": "3. Deterioration Synthesis", "fromCol": 3, "toCol": 4, "variant": "emphasis" },
+    { "id": "phase_delivery", "label": "4. Audit & SCAR PDF", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "grp_cv", "label": "Spatial Optical Engine", "lane": "vision", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "grp_civil", "label": "Civil Synthesis Loop", "lane": "morph", "fromCol": 3, "toCol": 4, "variant": "emphasis" },
+    { "id": "grp_standards", "label": "Tailored Material Protocol", "lane": "standards", "fromCol": 3, "toCol": 4, "variant": "security" }
+  ],
+  "mainPath": [
+    "user_upload",
+    "asset_metadata",
+    "yolo_segmentation",
+    "scale_calibration",
+    "morphometry_analysis",
+    "age_deterioration_context",
+    "remediation_specification",
+    "inspection_terminal",
+    "pdf_export"
+  ],
+  "nodes": [
+    {
+      "id": "user_upload",
+      "lane": "ui",
+      "col": 0,
+      "type": "external",
+      "label": "Asset Image Upload",
+      "sublabel": "Roads, Walls, Bridges, PT Slabs",
+      "tag": "JPG / PNG / WebP",
+      "width": 140
+    },
+    {
+      "id": "asset_metadata",
+      "lane": "ui",
+      "col": 1,
+      "type": "frontend",
+      "label": "Asset & Building Profile",
+      "sublabel": "Material, Year, System & Exposure",
+      "tag": "Context Form",
+      "width": 140
+    },
+    {
+      "id": "yolo_segmentation",
+      "lane": "vision",
+      "col": 1,
+      "type": "backend",
+      "label": "YOLOv8 Segmentation",
+      "sublabel": "Fissure Polygons & Tie-Hole Filter",
+      "tag": "Inference Engine",
+      "width": 140
+    },
+    {
+      "id": "scale_calibration",
+      "lane": "vision",
+      "col": 2,
+      "type": "backend",
+      "label": "Spatial Scale Calibration",
+      "sublabel": "ArUco Fiducial or 2-Point Manual",
+      "tag": "mm / pixel",
+      "width": 140
+    },
+    {
+      "id": "caliper_tool",
+      "lane": "vision",
+      "col": 3,
+      "type": "frontend",
+      "label": "Interactive CAD Calipers",
+      "sublabel": "Normal Vector Aperture Probing",
+      "tag": "Sub-pixel Sampling",
+      "width": 140
+    },
+    {
+      "id": "morphometry_analysis",
+      "lane": "morph",
+      "col": 2,
+      "type": "backend",
+      "label": "Morphometry Metrics",
+      "sublabel": "Length, Area, Pattern & Orientation",
+      "tag": "Fractal / Skeleton",
+      "width": 140
+    },
+    {
+      "id": "age_deterioration_context",
+      "lane": "morph",
+      "col": 3,
+      "type": "backend",
+      "label": "Age & Deterioration Context",
+      "sublabel": "Durability & Historical Synthesis",
+      "tag": "Evidence-Driven",
+      "width": 140
+    },
+    {
+      "id": "code_compliance",
+      "lane": "standards",
+      "col": 3,
+      "type": "backend",
+      "label": "Code Limit Checker",
+      "sublabel": "ACI 224R, Eurocode 2, IS 456, BS 8110",
+      "tag": "Permissible Width",
+      "width": 140
+    },
+    {
+      "id": "remediation_specification",
+      "lane": "standards",
+      "col": 4,
+      "type": "security",
+      "label": "Remediation Engine",
+      "sublabel": "Roads: AASHTO | Masonry: TMS | RC: ASTM",
+      "tag": "Tailored Protocol",
+      "width": 140
+    },
+    {
+      "id": "inspection_terminal",
+      "lane": "ui",
+      "col": 4,
+      "type": "frontend",
+      "label": "Inspection Dashboard",
+      "sublabel": "Visual Overlay & Remediation Card",
+      "tag": "Interactive UI",
+      "width": 140
+    },
+    {
+      "id": "db_registry",
+      "lane": "storage",
+      "col": 4,
+      "type": "database",
+      "label": "SQLite Asset Registry",
+      "sublabel": "Historical Surveys & Snapshots",
+      "tag": "SQLAlchemy ORM",
+      "width": 140
+    },
+    {
+      "id": "pdf_export",
+      "lane": "storage",
+      "col": 5,
+      "type": "database",
+      "label": "Official SCAR PDF",
+      "sublabel": "ReportLab Generator with PE Sign-Off",
+      "tag": "Audit Document",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_upload_meta",
+      "from": "user_upload",
+      "to": "asset_metadata",
+      "variant": "default"
+    },
+    {
+      "id": "e_meta_yolo",
+      "from": "asset_metadata",
+      "to": "yolo_segmentation",
+      "label": "image + profile",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_yolo_calib",
+      "from": "yolo_segmentation",
+      "to": "scale_calibration",
+      "label": "pixel masks",
+      "variant": "default"
+    },
+    {
+      "id": "e_calib_caliper",
+      "from": "scale_calibration",
+      "to": "caliper_tool",
+      "label": "spatial scale",
+      "variant": "dashed"
+    },
+    {
+      "id": "e_calib_morph",
+      "from": "scale_calibration",
+      "to": "morphometry_analysis",
+      "label": "metric scale",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_morph_standards",
+      "from": "morphometry_analysis",
+      "to": "code_compliance",
+      "label": "max aperture",
+      "variant": "default"
+    },
+    {
+      "id": "e_morph_age",
+      "from": "morphometry_analysis",
+      "to": "age_deterioration_context",
+      "label": "fissure + profile",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_age_remediation",
+      "from": "age_deterioration_context",
+      "to": "remediation_specification",
+      "label": "material + defect",
+      "variant": "security"
+    },
+    {
+      "id": "e_remediation_ui",
+      "from": "remediation_specification",
+      "to": "inspection_terminal",
+      "label": "prescribed actions",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e_ui_db",
+      "from": "inspection_terminal",
+      "to": "db_registry",
+      "label": "persist survey",
+      "variant": "default"
+    },
+    {
+      "id": "e_db_pdf",
+      "from": "db_registry",
+      "to": "pdf_export",
+      "label": "generate SCAR",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Computer Vision & Calibration Engine",
+      "items": [
+        "YOLOv8 instance segmentation extracts exact polygon coordinates of fissures",
+        "Spatial calibration via ArUco 50mm fiducial marker or user 2-point reference",
+        "Virtual CAD caliper tool probes localized normal vector apertures in sub-pixel resolution"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Material-Specific Remediation Engine",
+      "items": [
+        "Roads & Highways: AASHTO PP 44 cold-milling / HMA patching & ASTM D6690 rubberized sealant",
+        "Masonry: TMS 402/602 helical stainless steel tie stitching with breathable lime mortar",
+        "Water-Bearing Concrete: EN 1504-5 / ACI 504R expanding polyurethane chemical grout",
+        "Structural RC: ASTM C881 Type IV Grade 1 epoxy injection + temporary shoring & CFRP wrap"
+      ]
+    }
+  ]
+}

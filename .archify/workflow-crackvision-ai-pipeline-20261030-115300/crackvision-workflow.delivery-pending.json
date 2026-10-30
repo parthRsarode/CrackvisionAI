@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "command": "deliver",
+  "status": "pending",
+  "receiptId": "e8645167-4e33-4342-b7ac-2b850e41e7a0",
+  "input": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/candidate.json",
+  "output": "/Users/parthsarode/Documents/minor one/crackvision-ai/.archify/workflow-crackvision-ai-pipeline-20261030-115300/crackvision-workflow.html"
+}

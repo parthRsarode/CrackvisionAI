@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CrackVision AI — Detailed Pipeline & System Architecture",
+    "output": ".archify/architecture-crackvision-workflow-20261030-115500/crackvision-detailed-workflow.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "inspector", "type": "external", "label": "Civil Field Inspector", "sublabel": "Mobile / Desktop Upload", "pos": [40, 220], "size": [150, 60] },
+    { "id": "ui_uploader", "type": "frontend", "label": "Image Intake & Profile", "sublabel": "React + TypeScript UI", "pos": [230, 150], "size": [150, 60], "tag": "Asset Metadata" },
+    { "id": "ui_caliper", "type": "frontend", "label": "Virtual CAD Caliper", "sublabel": "Two-Point Scale & Probing", "pos": [230, 260], "size": [150, 60], "tag": "Sub-pixel UI" },
+    { "id": "results_dashboard", "type": "frontend", "label": "Assessment Terminal", "sublabel": "Interactive CAD Overlay", "pos": [230, 370], "size": [150, 60], "tag": "Client Dashboard" },
+    { "id": "fastapi", "type": "backend", "label": "FastAPI REST API", "sublabel": "Asynchronous Backend", "pos": [470, 260], "size": [150, 60], "tag": "Uvicorn :8000" },
+    { "id": "yolo_model", "type": "backend", "label": "YOLOv8 Segmentation", "sublabel": "PyTorch / Ultralytics", "pos": [720, 140], "size": [160, 60], "tag": "Polygon Masks" },
+    { "id": "calib_service", "type": "backend", "label": "Calibration Service", "sublabel": "OpenCV ArUco / 2-Point", "pos": [720, 260], "size": [160, 60], "tag": "mm / pixel" },
+    { "id": "morph_service", "type": "backend", "label": "Morphometry Service", "sublabel": "Aperture, Length & Area", "pos": [720, 380], "size": [160, 60], "tag": "Skeletonization" },
+    { "id": "standards_engine", "type": "backend", "label": "Standards & Remediation", "sublabel": "AASHTO / ASTM / TMS / EN", "pos": [980, 140], "size": [170, 60], "tag": "Prescribed Actions" },
+    { "id": "age_engine", "type": "backend", "label": "Age Context Engine", "sublabel": "ACI CODE-562 / IS 456", "pos": [980, 260], "size": [170, 60], "tag": "Durability Synthesis" },
+    { "id": "sqlite_db", "type": "database", "label": "SQLite Asset Registry", "sublabel": "SQLAlchemy ORM", "pos": [980, 380], "size": [170, 60], "tag": "Surveys & History" },
+    { "id": "pdf_reportlab", "type": "backend", "label": "SCAR PDF Generator", "sublabel": "ReportLab Clean SCAR", "pos": [1240, 260], "size": [160, 60], "tag": "PE / SE Sign-Off" }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Client Application (React + Vite + Tailwind)",
+      "wraps": ["ui_uploader", "ui_caliper", "results_dashboard"]
+    },
+    {
+      "kind": "security-group",
+      "label": "FastAPI Inspection Microservices Runtime",
+      "wraps": ["fastapi", "yolo_model", "calib_service", "morph_service", "standards_engine", "age_engine", "sqlite_db", "pdf_reportlab"]
+    }
+  ],
+  "connections": [
+    { "id": "c1", "from": "inspector", "to": "ui_uploader", "label": "upload image", "variant": "default" },
+    { "id": "c2", "from": "ui_uploader", "to": "fastapi", "label": "POST /analyze", "variant": "emphasis" },
+    { "id": "c3", "from": "fastapi", "to": "yolo_model", "label": "infer polygons", "fromSide": "top", "toSide": "left" },
+    { "id": "c4", "from": "fastapi", "to": "calib_service", "label": "compute scale", "fromSide": "right", "toSide": "left" },
+    { "id": "c5", "from": "fastapi", "to": "morph_service", "label": "morphometry", "fromSide": "bottom", "toSide": "left" },
+    { "id": "c6", "from": "yolo_model", "to": "standards_engine", "label": "fissure geometry", "fromSide": "right", "toSide": "left" },
+    { "id": "c7", "from": "calib_service", "to": "age_engine", "label": "metric scale + age", "fromSide": "right", "toSide": "left" },
+    { "id": "c8", "from": "morph_service", "to": "sqlite_db", "label": "persist metrics", "fromSide": "right", "toSide": "left" },
+    { "id": "c9", "from": "standards_engine", "to": "pdf_reportlab", "label": "remediation spec", "fromSide": "right", "toSide": "top" },
+    { "id": "c10", "from": "age_engine", "to": "pdf_reportlab", "label": "SCAR data", "fromSide": "right", "toSide": "left" },
+    { "id": "c11", "from": "fastapi", "to": "results_dashboard", "label": "analysis JSON", "variant": "emphasis", "fromSide": "bottom", "toSide": "right" },
+    { "id": "c12", "from": "ui_caliper", "to": "results_dashboard", "label": "caliper probes", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Computer Vision & Optical Scale Calibration",
+      "items": [
+        "YOLOv8 instance segmentation isolates exact crack polygon geometries",
+        "Spatial calibration detects ArUco 50mm fiducial markers or accepts user 2-point reference",
+        "Interactive CAD calipers calculate sub-pixel normal vector crack apertures"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Material & Location-Specific Remediation",
+      "items": [
+        "Roadways/Asphalt: AASHTO PP 44 cold-milling HMA patching & ASTM D6690 rubberized sealant",
+        "Structural Brickwork: TMS 402/602 helical tie stitching & ASTM C270 breathable lime mortar",
+        "Subterranean Basements: EN 1504-5 / ACI 504R expanding polyurethane chemical grout",
+        "Structural RC: ASTM C881 Type IV Grade 1 epoxy injection + temporary shoring & CFRP wrap"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Asset Registry & SCAR Verification",
+      "items": [
+        "Historical database logs condition progression across multiple inspections",
+        "Official SCAR PDF dynamically generates governing standard, remediation steps & PE sign-off",
+        "Evidence sufficiency prevents premature structural claims from surface visual alone"
+      ]
+    }
+  ]
+}
